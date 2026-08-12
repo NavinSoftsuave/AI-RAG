@@ -1,0 +1,109 @@
+"""Streamlit UI: 'Ask my legal contracts'.
+
+Upload PDF/TXT contracts, choose a chunk size, ask a question, and get an answer
+grounded only in your documents — with a citation to the source. Questions that
+aren't covered by the documents get an honest "I don't know".
+"""
+
+import tempfile
+from pathlib import Path
+
+import streamlit as st
+
+from rag.answer import build_answer
+from rag.chunking import chunk_text
+from rag.loaders import load_file
+from rag.store import VectorStore
+
+st.set_page_config(page_title="Ask my Contracts", page_icon="📄")
+
+
+@st.cache_resource
+def get_store() -> VectorStore:
+    # Cached so the embedding model loads once per session, not per rerun.
+    return VectorStore()
+
+
+store = get_store()
+
+st.title("📄 Ask my Contracts")
+st.caption(
+    "A tiny local RAG app. It answers only from the documents you upload, "
+    "cites the source, and says *I don't know* when the answer isn't there."
+)
+
+# Fixed defaults (previously exposed as sliders). Tune here if needed.
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 150
+TOP_K = 4
+
+# --- Sidebar: ingestion controls -------------------------------------------
+with st.sidebar:
+    st.header("1. Ingest documents")
+
+    uploaded = st.file_uploader(
+        "Upload contract files",
+        type=["pdf", "txt", "md"],
+        accept_multiple_files=True,
+    )
+
+    col_a, col_b = st.columns(2)
+    if col_a.button("Ingest", type="primary", use_container_width=True):
+        if not uploaded:
+            st.warning("Upload at least one file first.")
+        else:
+            total_chunks = 0
+            with st.spinner("Reading, chunking and embedding…"):
+                for uf in uploaded:
+                    suffix = Path(uf.name).suffix
+                    with tempfile.NamedTemporaryFile(
+                        delete=False, suffix=suffix
+                    ) as tmp:
+                        tmp.write(uf.getbuffer())
+                        tmp_path = tmp.name
+
+                    raw = load_file(tmp_path)
+                    chunks = chunk_text(
+                        raw,
+                        source=uf.name,
+                        chunk_size=CHUNK_SIZE,
+                        overlap=CHUNK_OVERLAP,
+                    )
+                    store.add_chunks(chunks)
+                    total_chunks += len(chunks)
+
+            st.success(f"Ingested {len(uploaded)} file(s) → {total_chunks} chunks.")
+
+    if col_b.button("Reset DB", use_container_width=True):
+        store.reset()
+        st.success("Cleared the vector store.")
+
+    st.metric("Chunks in store", store.count())
+
+# --- Main: ask a question ---------------------------------------------------
+st.header("2. Ask a question")
+question = st.text_input(
+    "Your question",
+    placeholder="e.g. What is the notice period for termination?",
+)
+
+if st.button("Ask") and question:
+    if store.count() == 0:
+        st.warning("No documents ingested yet — upload some in the sidebar.")
+    else:
+        hits = store.search(question, top_k=TOP_K)
+        answer = build_answer(question, hits)
+
+        if answer.answered:
+            st.success(answer.text)
+        else:
+            st.error(answer.text)
+
+        with st.expander("Retrieved chunks (what the app searched)"):
+            for i, hit in enumerate(hits, 1):
+                st.markdown(
+                    f"**{i}. {hit['source']}** · chunk {hit['chunk_index']} · "
+                    f"similarity `{hit['score']:.3f}`"
+                )
+                st.write(hit["text"])
+                st.divider()

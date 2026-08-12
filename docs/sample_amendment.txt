@@ -1,0 +1,19 @@
+AMENDMENT NO. 1 TO MASTER SERVICES AGREEMENT
+
+This Amendment No. 1 is entered into as of March 1, 2025, between Acme Corp and Globex Ltd.
+
+1. TERMINATION. Either party may terminate this Agreement for convenience by
+providing sixty (60) days prior written notice to the other party. In the event
+of a material breach, the non-breaching party may terminate immediately upon
+written notice if the breach is not cured within thirty (30) days.
+
+2. PAYMENT TERMS. Globex shall pay all undisputed invoices within forty-five (45)
+days of receipt. Late payments shall accrue interest at a rate of 1.5% per month.
+
+3. LIMITATION OF LIABILITY. Neither party's aggregate liability shall exceed the
+total fees paid under this Agreement in the twelve (12) months preceding the claim.
+
+4. CONFIDENTIALITY. Each party agrees to keep the other party's Confidential
+Information secret for a period of five (5) years following termination.
+
+5. GOVERNING LAW. This Agreement shall be governed by the laws of the State of Delaware.
