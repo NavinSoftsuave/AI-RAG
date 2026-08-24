@@ -8,16 +8,22 @@ load_dotenv()
 
 MODEL_NAME = "gemini-3.6-flash"
 
+_client: genai.Client | None = None
+
+
+class QuotaExceeded(RuntimeError):
+    """Raised when the Gemini API returns a 429 quota error, so callers can
+    distinguish a rate/quota limit from a genuine model response."""
+
 
 def _get_client() -> genai.Client:
-    api_key = os.getenv("GEMINI_API_KEY")
-
-    if not api_key:
-        raise RuntimeError(
-            "GEMINI_API_KEY environment variable is not set."
-        )
-
-    return genai.Client(api_key=api_key)
+    global _client
+    if _client is None:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise RuntimeError("GEMINI_API_KEY environment variable is not set.")
+        _client = genai.Client(api_key=api_key)
+    return _client
 
 
 def generate_answer(question: str, context: str) -> str:
@@ -67,10 +73,15 @@ ANSWER:
 
     client = _get_client()
 
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=prompt,
-    )
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
+    except Exception as exc:  # noqa: BLE001 - inspect for quota, re-raise otherwise
+        if "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc):
+            raise QuotaExceeded(str(exc)) from exc
+        raise
 
     if not response.text:
         return "I don't know."

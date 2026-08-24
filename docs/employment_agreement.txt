@@ -1,0 +1,42 @@
+EMPLOYMENT AGREEMENT
+
+This Employment Agreement ("Agreement") is made as of April 10, 2025 between
+Initech LLC ("Company") and Peter Gibbons ("Employee").
+
+1. POSITION AND DUTIES
+The Employee is employed as a Senior Software Engineer and shall report to the
+VP of Engineering. The Employee shall devote their full working time and
+attention to the business of the Company.
+
+2. COMPENSATION
+The Company shall pay the Employee an annual base salary of $145,000, payable in
+accordance with the Company's standard payroll schedule. The Employee is eligible
+for an annual performance bonus of up to 15% of base salary, at the Company's
+discretion.
+
+3. BENEFITS AND LEAVE
+The Employee is entitled to twenty (20) days of paid vacation per year and ten
+(10) paid sick days per year. Unused vacation of up to five (5) days may be
+carried over into the following year; any excess is forfeited.
+
+4. PROBATIONARY PERIOD
+The first ninety (90) days of employment constitute a probationary period during
+which either party may terminate the employment with two (2) weeks' notice.
+
+5. TERMINATION
+After the probationary period, the Company may terminate the Employee for cause
+immediately, or without cause upon thirty (30) days' written notice. The Employee
+may resign upon thirty (30) days' written notice.
+
+6. NON-COMPETE
+For a period of twelve (12) months following termination, the Employee shall not
+work for a direct competitor within the same metropolitan area. This restriction
+does not apply if the Employee is terminated without cause.
+
+7. INTELLECTUAL PROPERTY
+All work product created by the Employee within the scope of employment is the
+sole property of the Company.
+
+8. GOVERNING LAW
+This Agreement is governed by the laws of the State of California. Note that
+non-compete clauses may be unenforceable in some jurisdictions.

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from .llm import generate_answer
+from .llm import QuotaExceeded, generate_answer
 
 MIN_SIMILARITY = 0.55
 MAX_CONTEXT_CHUNKS = 3
@@ -46,6 +46,8 @@ def build_answer(question: str, hits: list[dict]) -> Answer:
         answer_text = generate_answer(
             question=question, context=_build_context(candidates)
         ).strip()
+    except QuotaExceeded:
+        raise  # let callers handle rate/quota limits explicitly
     except Exception as exc:
         return Answer(text=f"Unable to generate an answer: {exc}", sources=[], answered=False)
 
