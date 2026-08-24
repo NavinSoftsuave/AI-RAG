@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 from .llm import generate_answer
 
-
 MIN_SIMILARITY = 0.55
+MAX_CONTEXT_CHUNKS = 3
 
 
 @dataclass
@@ -13,121 +13,52 @@ class Answer:
     answered: bool
 
 
-def build_answer(question: str, hits: list[dict]) -> Answer:
-    """Generate a grounded answer from retrieved contract chunks."""
+def _refusal(reason: str) -> Answer:
+    return Answer(text=f"I don't know — {reason}", sources=[], answered=False)
 
-    # ---------------------------------------------------------
-    # STEP 1: No retrieval results
-    # ---------------------------------------------------------
 
-    if not hits:
-        return Answer(
-            text=(
-                "I don't know — I couldn't find relevant information "
-                "in the provided documents."
-            ),
-            sources=[],
-            answered=False,
-        )
-
-    # ---------------------------------------------------------
-    # STEP 2: Filter weak retrieval results
-    # ---------------------------------------------------------
-
-    # Gate on cosine similarity, which is on the same [0, 1] scale in BOTH search
-    # modes. The hybrid `score` is an RRF value (~0.02) on a different scale, so
-    # thresholding it against MIN_SIMILARITY would refuse every hybrid answer.
-    relevant_hits = [
-        hit for hit in hits
-        if hit.get("cosine", hit["score"]) >= MIN_SIMILARITY
+def _build_context(hits: list[dict]) -> str:
+    parts = [
+        f"[DOCUMENT {i}]\n"
+        f"Source document: {hit['source']}\n"
+        f"Chunk: {hit['chunk_index']}\n"
+        f"Similarity: {hit['score']:.3f}\n\n"
+        f"Contract text:\n{hit['text']}"
+        for i, hit in enumerate(hits, start=1)
     ]
+    return "\n\n".join(parts)
 
-    if not relevant_hits:
-        return Answer(
-            text=(
-                "I don't know — I couldn't find relevant information "
-                "in the provided documents."
-            ),
-            sources=[],
-            answered=False,
-        )
 
-    # ---------------------------------------------------------
-    # STEP 3: Use only the best relevant chunks
-    # ---------------------------------------------------------
+def build_answer(question: str, hits: list[dict]) -> Answer:
+    """Generate an answer grounded only in the retrieved chunks, or refuse."""
+    if not hits:
+        return _refusal("I couldn't find relevant information in the provided documents.")
 
-    candidates = relevant_hits[:3]
+    # Gate on cosine (same [0, 1] scale in both modes); the hybrid `score` is an
+    # RRF value on a different scale and can't be compared to MIN_SIMILARITY.
+    relevant = [h for h in hits if h.get("cosine", h["score"]) >= MIN_SIMILARITY]
+    if not relevant:
+        return _refusal("I couldn't find relevant information in the provided documents.")
 
-    # ---------------------------------------------------------
-    # STEP 4: Build context
-    # ---------------------------------------------------------
-
-    context_parts = []
-
-    for i, hit in enumerate(candidates, start=1):
-        context_parts.append(
-            f"""
-[DOCUMENT {i}]
-Source document: {hit['source']}
-Chunk: {hit['chunk_index']}
-Similarity: {hit['score']:.3f}
-
-Contract text:
-{hit['text']}
-"""
-        )
-
-    context = "\n".join(context_parts)
-
-    # ---------------------------------------------------------
-    # STEP 5: Ask Gemini
-    # ---------------------------------------------------------
+    candidates = relevant[:MAX_CONTEXT_CHUNKS]
 
     try:
         answer_text = generate_answer(
-            question=question,
-            context=context,
-        )
-
+            question=question, context=_build_context(candidates)
+        ).strip()
     except Exception as exc:
-        return Answer(
-            text=f"Unable to generate an answer: {exc}",
-            sources=[],
-            answered=False,
-        )
-
-    answer_text = answer_text.strip()
-
-    # ---------------------------------------------------------
-    # STEP 6: Gemini says it doesn't know
-    # ---------------------------------------------------------
+        return Answer(text=f"Unable to generate an answer: {exc}", sources=[], answered=False)
 
     if answer_text.lower() == "i don't know.":
-        return Answer(
-            text=(
-                "I don't know — the provided documents do not contain "
-                "enough information to answer this question."
-            ),
-            sources=[],
-            answered=False,
+        return _refusal(
+            "the provided documents do not contain enough information to answer this question."
         )
 
-    # ---------------------------------------------------------
-    # STEP 7: Add citations only for an actual answer
-    # ---------------------------------------------------------
-
     citations = "\n".join(
-        f"- {hit['source']} (chunk {hit['chunk_index']})"
-        for hit in candidates
+        f"- {hit['source']} (chunk {hit['chunk_index']})" for hit in candidates
     )
-
-    text = (
-        f"{answer_text}\n\n"
-        f"Sources:\n{citations}"
-    )
-
     return Answer(
-        text=text,
+        text=f"{answer_text}\n\nSources:\n{citations}",
         sources=candidates,
         answered=True,
     )

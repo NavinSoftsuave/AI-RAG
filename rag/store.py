@@ -1,16 +1,6 @@
-"""The vector store: embed chunks and search them by meaning.
-
-An EMBEDDING is a list of numbers (a vector) that captures the meaning of a
-piece of text. Two texts about the same idea land close together in this number
-space even if they share no keywords. That's the whole trick behind "search by
-meaning instead of by keyword".
-
-We use:
-  - sentence-transformers (BGE model) to turn text -> vectors, fully locally.
-  - Chroma to store those vectors and find the nearest ones to a question.
-
-Chroma uses an HNSW index under the hood, which finds approximate nearest
-neighbours fast without comparing against every chunk one by one.
+"""Vector store: embed chunks with a local BGE model and retrieve them with
+Chroma (semantic) and BM25 (keyword), optionally fused via Reciprocal Rank
+Fusion.
 """
 
 import re
@@ -22,23 +12,16 @@ from rank_bm25 import BM25Okapi
 
 from .chunking import Chunk
 
-# BGE-small: a compact, strong embedding model (top of the MTEB leaderboard for
-# its size). Downloaded once on first run, then cached locally.
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
-
 DB_DIR = str(Path(__file__).resolve().parent.parent / "chroma_db")
 
-# Reciprocal Rank Fusion constant. Standard default from the RRF paper; damps the
-# influence of very high ranks so no single list dominates the fused order.
+# RRF constant from the original paper; damps the weight of top ranks.
 RRF_K = 60
 
 
 def _tokenize(text: str) -> list[str]:
-    """Lowercase word/number tokens for BM25.
-
-    Keeps intra-token punctuation like the hyphen in "err-4032" and the "@" in
-    "admin@123" so exact codes/passwords stay searchable as whole terms.
-    """
+    """Lowercase tokens for BM25, preserving codes like ``err-4032`` and
+    ``admin@123`` as whole terms."""
     return re.findall(r"[a-z0-9][a-z0-9@._-]*", text.lower())
 
 
@@ -53,8 +36,7 @@ class VectorStore:
             embedding_function=self._embedder,
             metadata={"hnsw:space": "cosine"},
         )
-        # Lazily-built BM25 keyword index over the same chunks. Built on first
-        # hybrid search and cached; invalidated whenever chunks change.
+        # BM25 index, built lazily on first hybrid search and invalidated on ingest.
         self._bm25 = None
         self._bm25_ids: list[str] = []
 
@@ -68,25 +50,20 @@ class VectorStore:
             {"source": c.source, "chunk_index": c.chunk_index} for c in chunks
         ]
         self._collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
-        self._bm25 = None  # keyword index is now stale; rebuild on next use.
+        self._bm25 = None  # invalidate keyword index
 
     def search(
         self, question: str, top_k: int = 4, mode: str = "semantic"
     ) -> list[dict]:
         """Return the top_k chunks for a question.
 
-        mode="semantic" (default): search by MEANING only — the original
-            behaviour. This is the BEFORE baseline for the week's measurement.
+        ``mode="semantic"`` ranks by embedding similarity; ``mode="hybrid"``
+        fuses semantic and BM25 keyword rankings with RRF to also catch exact
+        terms (codes, passwords, IDs) that embeddings blur.
 
-        mode="hybrid": fuse semantic search with BM25 KEYWORD search using
-            Reciprocal Rank Fusion. Catches exact terms (codes like ERR-4032,
-            passwords like admin@123, IDs) that meaning-based search blurs, while
-            keeping semantic's strength on paraphrased questions. This is the
-            AFTER — the single change under test.
-
-        Each result includes its text, source document, chunk index, and a
-        score. For hybrid the score is the fused RRF score (higher = better);
-        for semantic it is cosine similarity in [0, 1].
+        Each hit has ``text``, ``source``, ``chunk_index``, ``score`` (cosine in
+        semantic mode, RRF in hybrid), and ``cosine`` (similarity in [0, 1] for
+        both modes).
         """
         if mode == "semantic":
             return self._semantic_search(question, top_k)
@@ -112,10 +89,9 @@ class VectorStore:
                     "source": meta["source"],
                     "chunk_index": meta["chunk_index"],
                     "score": similarity,
-                    # Cosine similarity in [0, 1]. In semantic mode this equals
-                    # `score`; kept as a separate field so the relevance gate in
-                    # answer.py can threshold on the SAME scale in both modes
-                    # (the hybrid `score` is an RRF value on a different scale).
+                    # Same [0, 1] scale in both modes so answer.py can threshold
+                    # consistently (the hybrid `score` is an RRF value, not a
+                    # similarity).
                     "cosine": similarity,
                 }
             )
@@ -129,35 +105,28 @@ class VectorStore:
         self._bm25_ids = data["ids"]
         self._bm25_docs = data["documents"]
         tokenized = [_tokenize(doc) for doc in self._bm25_docs]
-        # BM25Okapi needs at least one document; guard the empty-store case.
         self._bm25 = BM25Okapi(tokenized) if tokenized else None
 
     def _hybrid_search(self, question: str, top_k: int) -> list[dict]:
-        """Semantic + BM25, fused with Reciprocal Rank Fusion (RRF).
+        """Fuse semantic and BM25 rankings with RRF.
 
-        RRF combines two ranked lists without needing their scores to be on the
-        same scale: each list contributes 1 / (RRF_K + rank) to every item it
-        ranks. A chunk that ranks well in EITHER list — or modestly in both —
-        floats to the top. That is what lets a keyword-only match (exact code)
-        and a meaning-only match (paraphrase) both survive fusion.
+        Each list contributes ``1 / (RRF_K + rank)`` per item, so a chunk ranked
+        well in either list rises to the top without the two score scales needing
+        to be comparable.
         """
         self._ensure_bm25()
 
-        # Pull a wide candidate pool from each retriever so fusion has room to
-        # work — not just the final top_k from either one alone.
+        # Retrieve a wide candidate pool so fusion has room to reorder.
         pool = max(top_k * 5, 20)
 
-        # --- Semantic ranking (chunk id -> rank) ---
         sem = self._collection.query(query_texts=[question], n_results=pool)
         sem_ids = sem["ids"][0]
-        # Keep each candidate's cosine similarity so we can attach a comparable
-        # [0, 1] relevance score to the fused hits (the RRF score is not one).
+        # Retain cosine similarity to attach a comparable relevance score below.
         sem_cosine = {
             cid: 1.0 - dist
             for cid, dist in zip(sem_ids, sem["distances"][0])
         }
 
-        # --- Keyword ranking (chunk id -> rank) ---
         kw_ids: list[str] = []
         if self._bm25 is not None:
             scores = self._bm25.get_scores(_tokenize(question))
@@ -166,7 +135,6 @@ class VectorStore:
             )
             kw_ids = [self._bm25_ids[i] for i in order[:pool] if scores[i] > 0]
 
-        # --- Reciprocal Rank Fusion ---
         fused: dict[str, float] = {}
         for ranked in (sem_ids, kw_ids):
             for rank, cid in enumerate(ranked, start=1):
@@ -174,7 +142,6 @@ class VectorStore:
 
         top_ids = sorted(fused, key=lambda c: fused[c], reverse=True)[:top_k]
 
-        # Hydrate the winning ids back into full hit dicts.
         got = self._collection.get(ids=top_ids, include=["documents", "metadatas"])
         by_id = {
             cid: (doc, meta)
@@ -190,11 +157,9 @@ class VectorStore:
                     "text": doc,
                     "source": meta["source"],
                     "chunk_index": meta["chunk_index"],
-                    "score": fused[cid],  # fused RRF score (higher = better)
-                    # Comparable [0, 1] similarity for the relevance gate. A
-                    # keyword-only winner (not in the semantic pool) defaults to
-                    # 0.0 — the LLM's "answer only from context" check still
-                    # guards grounding, so a strong exact-term match isn't lost.
+                    "score": fused[cid],  # RRF score (higher = better)
+                    # Keyword-only winners default to 0.0; the LLM still guards
+                    # grounding, so a strong exact-term match isn't dropped here.
                     "cosine": sem_cosine.get(cid, 0.0),
                 }
             )
@@ -204,7 +169,7 @@ class VectorStore:
         return self._collection.count()
 
     def reset(self) -> None:
-        """Drop everything — used when you want to re-ingest from scratch."""
+        """Drop the collection and start fresh."""
         name = self._collection.name
         self._client.delete_collection(name)
         self._collection = self._client.get_or_create_collection(

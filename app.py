@@ -1,9 +1,5 @@
-"""Streamlit UI: 'Ask my legal contracts'.
-
-Upload PDF/TXT contracts, choose a chunk size, ask a question, and get an answer
-grounded only in your documents — with a citation to the source. Questions that
-aren't covered by the documents get an honest "I don't know".
-"""
+"""Streamlit UI: upload documents, ask a question, get a grounded, cited answer
+(or an honest "I don't know" when the documents don't cover it)."""
 
 import tempfile
 from pathlib import Path
@@ -20,7 +16,7 @@ st.set_page_config(page_title="Ask my Contracts", page_icon="📄")
 
 @st.cache_resource
 def get_store() -> VectorStore:
-    # Cached so the embedding model loads once per session, not per rerun.
+    # Cached so the embedding model loads once per session.
     return VectorStore()
 
 
@@ -32,7 +28,6 @@ st.caption(
     "cites the source, and says *I don't know* when the answer isn't there."
 )
 
-# Fixed defaults (previously exposed as sliders). Tune here if needed.
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 150
 TOP_K = 4
@@ -83,9 +78,7 @@ with st.sidebar:
 # --- Main: ask a question ---------------------------------------------------
 st.header("2. Ask a question")
 
-# Search mode toggle — this is the ONE change under test this week. Flip between
-# the semantic-only baseline and hybrid (semantic + BM25 keyword, fused with RRF)
-# to SEE, on the same question, whether hybrid pulls the right chunk higher.
+# Toggle semantic vs. hybrid retrieval to compare them on the same question.
 mode = st.radio(
     "Search mode",
     options=["hybrid", "semantic"],
@@ -108,10 +101,8 @@ if st.button("Ask") and question:
         hits = store.search(question, top_k=TOP_K, mode=mode)
         answer = build_answer(question, hits)
 
-        # --- Inspection view: question | retrieved chunks | final answer -----
-        # Seeing all three side by side is how you tell the two failure kinds
-        # apart: wrong chunks retrieved (retrieval failure) vs right chunks but a
-        # bad answer (generation failure).
+        # Show answer and retrieved chunks side by side to separate retrieval
+        # failures (wrong chunks) from generation failures (right chunks, bad answer).
         left, right = st.columns([1, 1])
 
         with left:

@@ -1,22 +1,11 @@
-"""Measure retrieval quality before and after the ONE change (hybrid search).
+"""Measure retrieval quality before (semantic) and after (hybrid) the change.
 
-What this does, end to end:
-  1. Ingest the 5 evaluation documents (docs/eval_corpus/).
-  2. Run all 15 questions through retrieval in BOTH modes:
-       - semantic  = the BEFORE baseline (meaning-only search).
-       - hybrid    = the AFTER (semantic + BM25 keyword, fused with RRF).
-  3. Compute hit-rate@3, recall@3 and MRR for each mode.
-  4. Label every miss as one of the two failure kinds the task asks for:
-       - WRONG_DOC              -> retrieval failure (fix retrieval).
-       - RIGHT_DOC_WRONG_ANSWER -> generation failure (fix the prompt/model).
-  5. Print a before/after table and, crucially, WHICH questions the change
-     fixed and which it did NOT.
+Ingests the eval corpus, runs every question in both modes, reports
+hit-rate@k and MRR, and labels each miss as WRONG_DOC (retrieval failure) or
+RIGHT_DOC_WRONG_ANSWER (generation failure). Retrieval-only — no Gemini key
+needed.
 
 Run:  ./venv/bin/python -m eval.run_eval
-
-Note: this measures RETRIEVAL only (did the right document show up?), so it does
-NOT need a Gemini key. Whether the generated answer is right is a separate,
-downstream question — see the labeling note below.
 """
 
 from pathlib import Path
@@ -29,13 +18,10 @@ from .dataset import CASES
 from .metrics import hit_rate_at_k, rank_of_gold, reciprocal_rank
 
 CORPUS_DIR = Path(__file__).resolve().parent.parent / "docs" / "eval_corpus"
-# Retrieve a slightly wider window than K so we can SEE whether the gold doc was
-# just outside the top-K (a near miss) versus absent entirely.
+# Retrieve wider than K to distinguish a near-miss (gold just outside K) from
+# gold being absent entirely.
 RETRIEVE_N = 10
-# Small chunks so each fact (one leave type, one error code, one password) is its
-# own vector. This is realistic: in a real corpus the gold fact competes against
-# hundreds of similar-looking chunks, which is exactly when semantic-only search
-# starts missing exact-term questions.
+# Small chunks so each fact is its own vector and competes with look-alikes.
 EVAL_CHUNK_SIZE = 120
 EVAL_OVERLAP = 20
 
@@ -58,12 +44,8 @@ def ingest(store: VectorStore) -> None:
 
 
 def evaluate(store: VectorStore, mode: str) -> list[dict]:
-    """Run every question in one mode; return per-question rows.
-
-    We retrieve a wide window (RETRIEVE_N) once and derive hit@1 and hit@3 from
-    the same ranking, plus the exact rank of the gold document so we can see
-    near-misses (gold at rank 2 vs gold absent entirely).
-    """
+    """Run every question in one mode; return one row per question with hit@1,
+    hit@3, the gold document's rank, and its reciprocal rank."""
     rows = []
     for case in CASES:
         hits = store.search(case.question, top_k=RETRIEVE_N, mode=mode)
@@ -95,21 +77,8 @@ def mrr(rows: list[dict]) -> float:
 
 
 def label_failure(row: dict, k: int) -> str:
-    """Sort a top-k miss into the two failure kinds the task asks about.
-
-    We are measuring RETRIEVAL, so the question is: did the right DOCUMENT reach
-    the top-k the generator gets to see?
-
-      WRONG_DOC  -> the gold document is NOT in the top-k. The generator never
-                    sees the answering text, so a smarter model fixes nothing.
-                    This is a RETRIEVAL failure — the kind hybrid search targets.
-
-      RIGHT_DOC_WRONG_ANSWER -> the gold document IS in the top-k (so retrieval
-                    succeeded), but at this granularity it didn't win. If the
-                    final generated answer is wrong despite the right doc being
-                    present, that is a GENERATION failure (prompt/model), not
-                    retrieval — and hybrid search would NOT be the right fix.
-    """
+    """Label a miss by failure kind: gold absent from top-k is a retrieval
+    failure; gold present but not winning is a generation failure."""
     hit_key = f"hit_at_{k}"
     return "WRONG_DOC (retrieval)" if row[hit_key] == 0 else "RIGHT_DOC_WRONG_ANSWER (generation)"
 
@@ -198,15 +167,12 @@ def main() -> None:
     print_summary(before, after)
     print_per_question(before, after)
 
-    # The headline buy-back the task asks for is at hit-rate@3: one question's gold
-    # doc sits at semantic rank 5 (a real top-3 miss) and hybrid lifts it to rank 3.
-    # We label and diff at k=3 so the output matches the reported number.
+    # k=3: the headline buy-back the task asks for.
     print_failure_labels(before, "BEFORE (semantic)", k=3)
     print_failure_labels(after, "AFTER (hybrid)", k=3)
     print_delta(before, after, k=3)
 
-    # We ALSO show k=1, because four rank-1 misses remain (shared-vocabulary
-    # distractors) that hybrid cannot fix — the "what the change did NOT fix" part.
+    # k=1: the rank-1 misses hybrid can't fix (shared-vocabulary distractors).
     print_failure_labels(before, "BEFORE (semantic)", k=1)
     print_failure_labels(after, "AFTER (hybrid)", k=1)
     print_delta(before, after, k=1)

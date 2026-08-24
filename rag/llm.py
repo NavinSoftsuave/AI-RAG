@@ -3,8 +3,7 @@ import os
 from dotenv import load_dotenv
 from google import genai
 
-# Load GEMINI_API_KEY (and anything else) from the project .env on import, so the
-# key set in .env is picked up by both the Streamlit app and the CLI.
+# Load GEMINI_API_KEY from .env for both the app and the CLI.
 load_dotenv()
 
 MODEL_NAME = "gemini-3.6-flash"

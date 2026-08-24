@@ -1,41 +1,23 @@
-"""Split documents into small chunks for embedding.
+"""Split documents into chunks for embedding.
 
-Why chunk at all? An embedding turns a piece of text into one vector. If you
-embed a whole 20-page contract as a single vector, the "meaning" gets averaged
-out and search becomes useless. Small chunks keep each vector focused on one
-idea, so retrieval can point at the exact clause that answers a question.
-
-Two strategies live here:
-
-  chunk_by_clause  — split on numbered clause headings ("8. TERMINATION ...").
-                     Each chunk is one whole clause, so a retrieved passage
-                     reads cleanly instead of starting mid-sentence. This is
-                     the default because legal contracts are clause-structured.
-
-  chunk_by_size    — fixed-size overlapping windows. A fallback for documents
-                     with no clause numbering. Overlap repeats the end of one
-                     window at the start of the next so an answer that straddles
-                     a boundary still lands whole inside at least one chunk.
-
-`chunk_text` picks clause splitting when the document looks clause-numbered and
-falls back to size-based windows otherwise.
+``chunk_text`` splits on numbered clause headings when a document is
+clause-structured (contracts) and falls back to fixed-size overlapping windows
+otherwise.
 """
 
 import re
 from dataclasses import dataclass
 
-# Matches a numbered clause heading such as "8. TERMINATION" or "1. TERM" at the
-# start of a clause. Requires the number to be followed by an uppercase word so
-# it doesn't fire on "sixty (60)" style numbers inside a sentence.
-_CLAUSE_RE = re.compile(
-    r"(?:^|\s)(\d{1,2})\.\s+(?=[A-Z][A-Z])"
-)
+# Numbered clause heading, e.g. "8. TERMINATION". Requires an uppercase word
+# after the number so it doesn't fire on "sixty (60)" inside a sentence.
+_CLAUSE_RE = re.compile(r"(?:^|\s)(\d{1,2})\.\s+(?=[A-Z][A-Z])")
+
 
 @dataclass
 class Chunk:
     text: str
-    source: str          # which document this came from (for citations)
-    chunk_index: int     # position within that document
+    source: str          # source document, for citations
+    chunk_index: int     # position within the document
 
 
 def chunk_by_clause(
@@ -149,8 +131,7 @@ def chunk_text(
     normalised = " ".join(text.split())
     clause_starts = list(_CLAUSE_RE.finditer(normalised))
 
-    # Use clause splitting only when the document is clearly clause-structured
-    # (several numbered headings), otherwise the fallback is safer.
+    # Only clause-split when several numbered headings are present.
     if len(clause_starts) >= 3:
         return chunk_by_clause(text, source, max_chars=max(chunk_size, 1200))
 

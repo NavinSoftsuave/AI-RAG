@@ -1,21 +1,14 @@
-"""The evaluation dataset: questions + ground-truth source document.
+"""Evaluation dataset: each question paired with the document that should answer
+it (ground truth for hit-rate@k).
 
-These 15 questions come from RAG_Test_Documents_and_Questions.docx. For each
-question we record which document *should* be retrieved to answer it. That
-ground truth is what lets us compute hit-rate@k as a NUMBER instead of eyeballing
-whether an answer "looks right".
-
-The corpus is a deliberate mix:
-  - Some questions are answerable by MEANING alone (e.g. "Can fathers take leave
-    after a child's birth?" -> paternity leave, with zero shared keywords).
-  - Some hinge on EXACT terms (e.g. "What does ERR-4032 mean?", "default admin
-    password") where semantic embeddings blur and keyword search wins.
-That mix is exactly why hybrid (semantic + keyword) is the change under test.
+The mix is deliberate — some questions are answerable by meaning alone, others
+hinge on exact terms (codes, passwords) where keyword search wins — which is why
+hybrid retrieval is the change under test.
 """
 
 from dataclasses import dataclass
 
-# The source filenames as they get ingested (see docs/eval_corpus/).
+# Source filenames as ingested (see docs/eval_corpus/).
 LEAVE = "employee_leave_policy.txt"
 IT = "it_support_guide.txt"
 INSURANCE = "insurance_policy.txt"

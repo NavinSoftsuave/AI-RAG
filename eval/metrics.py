@@ -1,22 +1,7 @@
-"""Retrieval metrics — the numbers that prove a change helped.
+"""Retrieval metrics over a ranking (ordered source filenames, best first).
 
-All three answer "did the right document show up, and how high?":
-
-  hit_rate@k  — fraction of questions where the correct document appears
-                ANYWHERE in the top-k. This is the headline number the task asks
-                for (hit-rate@3). Binary per question: found it or not.
-
-  recall@k    — here each question has exactly one correct document, so recall@k
-                equals hit_rate@k. Kept as a separate name because the concept
-                generalises when a question has several correct documents.
-
-  mrr         — Mean Reciprocal Rank. Rewards putting the right doc HIGHER, not
-                just somewhere in the top-k. Rank 1 -> 1.0, rank 2 -> 0.5,
-                rank 3 -> 0.33. Catches improvements that hit-rate can't see
-                (e.g. reranking that lifts the right doc from #3 to #1).
-
-A "ranking" here is the ordered list of source filenames retrieved for a
-question, best first.
+  hit_rate@k  — is the correct document anywhere in the top-k? (headline metric)
+  mrr         — Mean Reciprocal Rank; rewards ranking the right document higher.
 """
 
 

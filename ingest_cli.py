@@ -1,9 +1,6 @@
 """Ingest a folder of documents from the command line.
 
     python ingest_cli.py docs/ --chunk-size 800 --overlap 150
-
-Useful for comparing chunk sizes quickly without the UI: ingest at one size,
-run some questions, reset, ingest at another size, compare.
 """
 
 import argparse
