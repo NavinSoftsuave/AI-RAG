@@ -13,6 +13,13 @@ from rag.store import VectorStore
 
 st.set_page_config(page_title="Ask my Contracts", page_icon="📄")
 
+# Long, unbroken filenames (e.g. an uploaded PDF name) would otherwise overflow
+# their column; force wrapping so the two columns never overlap.
+st.markdown(
+    "<style>[data-testid='stMarkdownContainer'] * { overflow-wrap: anywhere; }</style>",
+    unsafe_allow_html=True,
+)
+
 
 @st.cache_resource
 def get_store() -> VectorStore:
@@ -101,23 +108,26 @@ if st.button("Ask") and question:
         hits = store.search(question, top_k=TOP_K, mode=mode)
         answer = build_answer(question, hits)
 
-        # Show answer and retrieved chunks side by side to separate retrieval
-        # failures (wrong chunks) from generation failures (right chunks, bad answer).
-        left, right = st.columns([1, 1])
+        # Answer on top, retrieved chunks below — both full width. Seeing them
+        # together separates retrieval failures (wrong chunks) from generation
+        # failures (right chunks, bad answer).
+        st.subheader("Final answer")
+        # Split the bundled "Sources:" block off so the long filenames render
+        # as a wrapping caption instead of overflowing the success box.
+        body, _, _sources = answer.text.partition("\n\nSources:")
+        if answer.answered:
+            st.success(body)
+            if answer.sources:
+                st.caption("Sources")
+                for hit in answer.sources:
+                    st.caption(f"• {hit['source']} · chunk {hit['chunk_index']}")
+        else:
+            st.error(body)
 
-        with left:
-            st.subheader("Final answer")
-            if answer.answered:
-                st.success(answer.text)
-            else:
-                st.error(answer.text)
+        st.divider()
 
-        with right:
-            st.subheader(f"Retrieved chunks · mode = {mode}")
-            for i, hit in enumerate(hits, 1):
-                st.markdown(
-                    f"**{i}. {hit['source']}** · chunk {hit['chunk_index']} · "
-                    f"score `{hit['score']:.3f}`"
-                )
+        st.subheader(f"Retrieved chunks · mode = {mode}")
+        for i, hit in enumerate(hits, 1):
+            label = f"{i}. {hit['source']} · chunk {hit['chunk_index']} · score {hit['score']:.3f}"
+            with st.expander(label, expanded=(i == 1)):
                 st.write(hit["text"])
-                st.divider()
