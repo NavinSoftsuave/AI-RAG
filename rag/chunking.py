@@ -27,8 +27,9 @@ from dataclasses import dataclass
 # Matches a numbered clause heading such as "8. TERMINATION" or "1. TERM" at the
 # start of a clause. Requires the number to be followed by an uppercase word so
 # it doesn't fire on "sixty (60)" style numbers inside a sentence.
-_CLAUSE_RE = re.compile(r"(?:^|\s)(\d{1,2})\.\s+(?=[A-Z][A-Z])")
-
+_CLAUSE_RE = re.compile(
+    r"(?:^|\s)(\d{1,2})\.\s+(?=[A-Z][A-Z])"
+)
 
 @dataclass
 class Chunk:

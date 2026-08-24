@@ -1,0 +1,8 @@
+SmartPrinter X200 User Manual
+
+The SmartPrinter X200 supports:
+- Wireless printing
+- USB printing
+- Duplex printing
+
+The default admin password is admin@123.

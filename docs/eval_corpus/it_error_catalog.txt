@@ -1,0 +1,13 @@
+IT Error Code Catalog
+
+Error Code ERR-1001 indicates a network timeout while contacting the server.
+Error Code ERR-2015 indicates the session token has expired.
+Error Code ERR-3007 indicates insufficient disk space on the device.
+Error Code ERR-4010 indicates the account is pending email verification.
+Error Code ERR-4031 indicates the password does not meet complexity rules.
+Error Code ERR-4033 indicates the account has been suspended by an administrator.
+Error Code ERR-5002 indicates the printer is offline or unreachable.
+Error Code ERR-6120 indicates too many concurrent sessions for this user.
+
+For any locked, suspended, or expired account, contact the IT service desk with
+your employee ID. Most account issues are resolved within one business day.

@@ -82,6 +82,20 @@ with st.sidebar:
 
 # --- Main: ask a question ---------------------------------------------------
 st.header("2. Ask a question")
+
+# Search mode toggle — this is the ONE change under test this week. Flip between
+# the semantic-only baseline and hybrid (semantic + BM25 keyword, fused with RRF)
+# to SEE, on the same question, whether hybrid pulls the right chunk higher.
+mode = st.radio(
+    "Search mode",
+    options=["hybrid", "semantic"],
+    format_func=lambda m: {
+        "hybrid": "Hybrid (meaning + keywords) — new",
+        "semantic": "Semantic only (baseline)",
+    }[m],
+    horizontal=True,
+)
+
 question = st.text_input(
     "Your question",
     placeholder="e.g. What is the notice period for termination?",
@@ -91,19 +105,28 @@ if st.button("Ask") and question:
     if store.count() == 0:
         st.warning("No documents ingested yet — upload some in the sidebar.")
     else:
-        hits = store.search(question, top_k=TOP_K)
+        hits = store.search(question, top_k=TOP_K, mode=mode)
         answer = build_answer(question, hits)
 
-        if answer.answered:
-            st.success(answer.text)
-        else:
-            st.error(answer.text)
+        # --- Inspection view: question | retrieved chunks | final answer -----
+        # Seeing all three side by side is how you tell the two failure kinds
+        # apart: wrong chunks retrieved (retrieval failure) vs right chunks but a
+        # bad answer (generation failure).
+        left, right = st.columns([1, 1])
 
-        with st.expander("Retrieved chunks (what the app searched)"):
+        with left:
+            st.subheader("Final answer")
+            if answer.answered:
+                st.success(answer.text)
+            else:
+                st.error(answer.text)
+
+        with right:
+            st.subheader(f"Retrieved chunks · mode = {mode}")
             for i, hit in enumerate(hits, 1):
                 st.markdown(
                     f"**{i}. {hit['source']}** · chunk {hit['chunk_index']} · "
-                    f"similarity `{hit['score']:.3f}`"
+                    f"score `{hit['score']:.3f}`"
                 )
                 st.write(hit["text"])
                 st.divider()

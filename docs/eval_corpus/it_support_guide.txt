@@ -1,0 +1,8 @@
+IT Support Guide
+
+Error Code ERR-4032 indicates that the user's account has been locked after five failed login attempts.
+
+To unlock the account:
+1. Click "Forgot Password".
+2. Reset the password.
+3. Wait 15 minutes before logging in again.
