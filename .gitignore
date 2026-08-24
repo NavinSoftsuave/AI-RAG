@@ -1,0 +1,61 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# ---- Virtual environments ----
+venv/
+.venv/
+env/
+.env
+ENV/
+bin/
+include/
+lib/
+lib64/
+pyvenv.cfg
+share/
+
+# ---- Environment / secrets ----
+.env
+.env.*
+*.local
+
+# ---- RAG data stores ----
+chroma_db/
+*.sqlite3
+*.bin
+
+# ---- Model / cache files ----
+.cache/
+*.pt
+*.onnx
+.huggingface/
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- Testing / coverage ----
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ---- IDE / editor ----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
