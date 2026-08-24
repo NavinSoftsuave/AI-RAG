@@ -38,11 +38,6 @@ class Chunk:
     chunk_index: int     # position within that document
 
 
-def _split_into_paragraphs(text: str) -> list[str]:
-    """Group a long clause into readable ~size-bounded pieces if needed."""
-    return [text]
-
-
 def chunk_by_clause(
     text: str,
     source: str,

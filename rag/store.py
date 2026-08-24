@@ -105,13 +105,18 @@ class VectorStore:
 
         hits = []
         for text, meta, distance in zip(docs, metas, distances):
+            similarity = 1.0 - distance  # Chroma returns cosine DISTANCE.
             hits.append(
                 {
                     "text": text,
                     "source": meta["source"],
                     "chunk_index": meta["chunk_index"],
-                    # Chroma returns cosine DISTANCE; similarity = 1 - distance.
-                    "score": 1.0 - distance,
+                    "score": similarity,
+                    # Cosine similarity in [0, 1]. In semantic mode this equals
+                    # `score`; kept as a separate field so the relevance gate in
+                    # answer.py can threshold on the SAME scale in both modes
+                    # (the hybrid `score` is an RRF value on a different scale).
+                    "cosine": similarity,
                 }
             )
         return hits
@@ -145,6 +150,12 @@ class VectorStore:
         # --- Semantic ranking (chunk id -> rank) ---
         sem = self._collection.query(query_texts=[question], n_results=pool)
         sem_ids = sem["ids"][0]
+        # Keep each candidate's cosine similarity so we can attach a comparable
+        # [0, 1] relevance score to the fused hits (the RRF score is not one).
+        sem_cosine = {
+            cid: 1.0 - dist
+            for cid, dist in zip(sem_ids, sem["distances"][0])
+        }
 
         # --- Keyword ranking (chunk id -> rank) ---
         kw_ids: list[str] = []
@@ -180,6 +191,11 @@ class VectorStore:
                     "source": meta["source"],
                     "chunk_index": meta["chunk_index"],
                     "score": fused[cid],  # fused RRF score (higher = better)
+                    # Comparable [0, 1] similarity for the relevance gate. A
+                    # keyword-only winner (not in the semantic pool) defaults to
+                    # 0.0 — the LLM's "answer only from context" check still
+                    # guards grounding, so a strong exact-term match isn't lost.
+                    "cosine": sem_cosine.get(cid, 0.0),
                 }
             )
         return hits

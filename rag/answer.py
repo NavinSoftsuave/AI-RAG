@@ -34,9 +34,12 @@ def build_answer(question: str, hits: list[dict]) -> Answer:
     # STEP 2: Filter weak retrieval results
     # ---------------------------------------------------------
 
+    # Gate on cosine similarity, which is on the same [0, 1] scale in BOTH search
+    # modes. The hybrid `score` is an RRF value (~0.02) on a different scale, so
+    # thresholding it against MIN_SIMILARITY would refuse every hybrid answer.
     relevant_hits = [
         hit for hit in hits
-        if hit["score"] >= MIN_SIMILARITY
+        if hit.get("cosine", hit["score"]) >= MIN_SIMILARITY
     ]
 
     if not relevant_hits:

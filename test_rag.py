@@ -2,7 +2,7 @@
 
 Run it with:   ./venv/bin/python test_rag.py
 
-It ingests docs/sample_amendment.txt, then asks a few questions and checks:
+It ingests docs/sample_service_agreement.pdf, then asks a few questions and checks:
   - in-scope questions get answered, with a citation
   - an out-of-scope question is refused ("I don't know")
 """

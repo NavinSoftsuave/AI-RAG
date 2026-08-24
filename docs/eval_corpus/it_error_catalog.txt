@@ -1,13 +1,32 @@
 IT Error Code Catalog
 
 Error Code ERR-1001 indicates a network timeout while contacting the server.
+Error Code ERR-1002 indicates the network connection was reset by the server.
+Error Code ERR-1003 indicates a DNS lookup failure for the service host.
+Error Code ERR-2010 indicates the session could not be established.
 Error Code ERR-2015 indicates the session token has expired.
+Error Code ERR-2016 indicates the session token is malformed or invalid.
 Error Code ERR-3007 indicates insufficient disk space on the device.
+Error Code ERR-3008 indicates the device storage is read-only.
 Error Code ERR-4010 indicates the account is pending email verification.
+Error Code ERR-4020 indicates the account has been locked by security policy.
+Error Code ERR-4025 indicates the account was locked after repeated failures.
+Error Code ERR-4030 indicates the account is temporarily locked, retry later.
 Error Code ERR-4031 indicates the password does not meet complexity rules.
 Error Code ERR-4033 indicates the account has been suspended by an administrator.
+Error Code ERR-4034 indicates the account has been locked pending review.
+Error Code ERR-4035 indicates the account is locked after too many attempts.
 Error Code ERR-5002 indicates the printer is offline or unreachable.
 Error Code ERR-6120 indicates too many concurrent sessions for this user.
+
+Account lockouts
+Many error codes describe a locked account after failed login attempts.
+A locked account must be unlocked before the user can log in again.
+Repeated failed login attempts will lock the account for security reasons.
+When an account is locked after failed login attempts, follow the reset steps.
+Unlocking a locked account usually requires resetting the password first.
+An account that is locked after failed login attempts stays locked until reset.
+Too many failed login attempts on any account will trigger a security lockout.
 
 For any locked, suspended, or expired account, contact the IT service desk with
 your employee ID. Most account issues are resolved within one business day.

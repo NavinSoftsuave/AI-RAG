@@ -198,9 +198,15 @@ def main() -> None:
     print_summary(before, after)
     print_per_question(before, after)
 
-    # This corpus's retrieval failures live at RANK 1 (a near-identical wrong-doc
-    # chunk outranks the right one), so we label and diff at k=1 — that is where
-    # the measurable buy-back happens. hit-rate@3 is reported above for the task.
+    # The headline buy-back the task asks for is at hit-rate@3: one question's gold
+    # doc sits at semantic rank 5 (a real top-3 miss) and hybrid lifts it to rank 3.
+    # We label and diff at k=3 so the output matches the reported number.
+    print_failure_labels(before, "BEFORE (semantic)", k=3)
+    print_failure_labels(after, "AFTER (hybrid)", k=3)
+    print_delta(before, after, k=3)
+
+    # We ALSO show k=1, because four rank-1 misses remain (shared-vocabulary
+    # distractors) that hybrid cannot fix — the "what the change did NOT fix" part.
     print_failure_labels(before, "BEFORE (semantic)", k=1)
     print_failure_labels(after, "AFTER (hybrid)", k=1)
     print_delta(before, after, k=1)

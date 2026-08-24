@@ -37,20 +37,3 @@ def hit_rate_at_k(ranked_sources: list[str], gold_source: str, k: int) -> int:
 def reciprocal_rank(ranked_sources: list[str], gold_source: str) -> float:
     rank = rank_of_gold(ranked_sources, gold_source)
     return 1.0 / rank if rank is not None else 0.0
-
-
-def aggregate(per_question: list[dict], k: int) -> dict:
-    """Roll per-question results into hit-rate@k, recall@k and MRR."""
-    n = len(per_question)
-    if n == 0:
-        return {"n": 0, "hit_rate": 0.0, "recall": 0.0, "mrr": 0.0}
-
-    hits = sum(r["hit_at_k"] for r in per_question)
-    mrr = sum(r["reciprocal_rank"] for r in per_question) / n
-    return {
-        "n": n,
-        "k": k,
-        "hit_rate": hits / n,   # hit-rate@k
-        "recall": hits / n,     # == hit-rate@k for single-gold questions
-        "mrr": mrr,
-    }
