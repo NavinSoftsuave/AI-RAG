@@ -9,7 +9,7 @@ free. Judge calls are cached to disk via rag.llm.generate.
 from dataclasses import dataclass
 from pathlib import Path
 
-from rag.llm import generate
+from rag.llm import _cache_path, generate
 
 JUDGE_DIR = Path(__file__).resolve().parent
 
@@ -26,13 +26,28 @@ def load_prompt(version: str) -> str:
     return (JUDGE_DIR / f"judge_{version}.txt").read_text(encoding="utf-8")
 
 
-def judge(question: str, context: str, answer: str, version: str = "v1") -> Verdict:
-    prompt = (
+def _build_prompt(question: str, context: str, answer: str, version: str) -> str:
+    return (
         f"{load_prompt(version)}\n\n"
         f"QUESTION:\n{question}\n\n"
         f"CONTEXT:\n{context}\n\n"
         f"ANSWER:\n{answer}\n"
     )
+
+
+def is_cached(question: str, context: str, answer: str, version: str = "v1") -> bool:
+    return _cache_path(_build_prompt(question, context, answer, version)).exists()
+
+
+def judge(
+    question: str, context: str, answer: str, version: str = "v1",
+    cached_only: bool = False,
+) -> Verdict | None:
+    """Grade one answer. Returns None when cached_only and no cached verdict
+    exists (so the eval can run fully offline without spending quota)."""
+    prompt = _build_prompt(question, context, answer, version)
+    if cached_only and not _cache_path(prompt).exists():
+        return None
     raw = generate(prompt).strip()
     first = raw.splitlines()[0].strip().upper() if raw else ""
     correct = first.startswith("CORRECT")
