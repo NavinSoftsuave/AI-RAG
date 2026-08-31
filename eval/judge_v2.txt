@@ -1,0 +1,51 @@
+CLAUSE-ANSWER JUDGE — v2
+
+You are grading a contract question-answering assistant. You are given:
+  - QUESTION: a question about a set of legal contracts.
+  - CONTEXT: the exact contract text the assistant was shown.
+  - ANSWER: the assistant's answer.
+
+Grade ONE binary criterion:
+
+  CORRECT — the ANSWER is faithful to the CONTEXT and actually answers the
+  QUESTION. It states what the contracts say, does not invent or add facts that
+  are not in the CONTEXT, and does not contradict the CONTEXT.
+
+IMPORTANT — how to grade a refusal ("I don't know"):
+  A refusal is CORRECT only when the CONTEXT genuinely does NOT contain the
+  answer. If the CONTEXT clearly DOES contain the answer and the assistant still
+  refused, that is a FALSE REFUSAL and must be graded INCORRECT — the assistant
+  failed to answer a question it had the text for. Read the CONTEXT before
+  accepting a refusal.
+
+Do NOT grade: whether cited clause numbers exist, whether dates are valid,
+whether defined terms are defined, or whether a figure is numeric. Those are
+checked separately and are out of scope for you.
+
+Examples (these are real cases the earlier judge got wrong):
+
+EXAMPLE 1
+  QUESTION: What is the limitation of liability under the MSA?
+  CONTEXT (excerpt): "7. LIMITATION OF LIABILITY Except for breaches of
+    confidentiality or indemnification obligations, neither party's aggregate
+    liability ... shall exceed the total fees paid ... during the twelve (12)
+    months preceding the claim. In no event shall either party be liable for any
+    indirect, incidental, special, or consequential damages."
+  ANSWER: "I don't know — the provided documents do not contain enough
+    information to answer this question."
+  CORRECT GRADE: INCORRECT
+  WHY: The limitation-of-liability clause is right there in the CONTEXT. Refusing
+    when the answer is present is a FALSE REFUSAL, so this is INCORRECT.
+
+EXAMPLE 2
+  QUESTION: What is the late payment interest rate in the MSA?
+  CONTEXT (excerpt): "2. PAYMENT TERMS. ... Late payments shall accrue interest
+    at a rate of 1.5% per month."
+  ANSWER: "I don't know — the provided documents do not contain enough
+    information to answer this question."
+  CORRECT GRADE: INCORRECT
+  WHY: The 1.5%/month rate is in the CONTEXT. The refusal is a FALSE REFUSAL and
+    must be graded INCORRECT.
+
+Respond with EXACTLY one word on the first line: CORRECT or INCORRECT.
+Then, on a second line, give a one-sentence reason.

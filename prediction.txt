@@ -1,0 +1,28 @@
+PREDICTION (written before running the judge and before iterating it)
+
+Context: judge_v1 grades one binary criterion — is the app's answer faithful to
+the contracts AND does it answer the question (a refusal is CORRECT only when the
+answer is genuinely absent).
+
+Prediction about judge_v1 vs my 25 blind labels:
+  I expect judge_v1 to DISAGREE with me mainly on the FALSE-REFUSAL cases
+  (ids 2, 3, 4, 6, 11, 12, 25). I labeled those INCORRECT because the answering
+  clause was retrieved yet the app refused. I predict the judge will call several
+  of them CORRECT, because a lone "I don't know" reads as safe/faithful to a judge
+  that is only shown the answer text and does not know the answer was actually
+  present in the context. So agreement will be dragged down by the judge being too
+  lenient on false refusals.
+
+Prediction about the v1 -> v2 iteration:
+  Feeding the judge 2 of its OWN disagreements (a false refusal I marked INCORRECT
+  but it marked CORRECT) as few-shot examples — with the rule made explicit that
+  "a refusal is INCORRECT when the context DOES contain the answer" — will raise
+  agreement by correcting exactly those false-refusal verdicts. I predict
+  agreement moves up by roughly 10-20 points.
+
+Where I expect the prediction to be WRONG / uncertain:
+  The judge only sees the retrieved CONTEXT + answer, so it CAN in principle see
+  that a refusal was unjustified — meaning v1 might already catch some false
+  refusals and the lift could be smaller than I think. I am also unsure the judge
+  can reliably resolve the conflict cases (11, 12) even with examples, since that
+  needs it to reason that the amendment supersedes the base contract.
