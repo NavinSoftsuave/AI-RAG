@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "purpose": "Blind human labels on the judge's single binary criterion (CORRECT/INCORRECT = is the answer faithful to the contracts AND does it answer the question). Hand-labeled by reading traces/legal_traces.jsonl ONLY, before any LLM judge was run. Commit order proves this file predates the judge run.",
+    "criterion": "CORRECT if the answer states what the contracts say and answers the question (a refusal is CORRECT only when the answer is genuinely absent); otherwise INCORRECT.",
+    "labeler": "human (blind, pre-judge)",
+    "n": 25
+  },
+  "labels": [
+    {"id": 1,  "question": "What is the notice period to terminate the Master Services Agreement for convenience?", "label": "CORRECT",   "reason": "States 60 days' prior written notice; matches MSA clause 8."},
+    {"id": 2,  "question": "What law governs the Master Services Agreement?", "label": "INCORRECT", "reason": "False refusal: MSA governing-law text was retrieved (Delaware) but the app said I don't know."},
+    {"id": 3,  "question": "How long does confidentiality survive termination of the MSA?", "label": "INCORRECT", "reason": "False refusal: the rank-1 chunk contains 'five (5) years'."},
+    {"id": 4,  "question": "What is the limitation of liability under the MSA?", "label": "INCORRECT", "reason": "False refusal: MSA clause 7 was rank 1 with the full cap language."},
+    {"id": 5,  "question": "What is the initial term of the Master Services Agreement?", "label": "CORRECT",   "reason": "States two (2) years; matches MSA clause 1."},
+    {"id": 6,  "question": "What is the late payment interest rate in the MSA?", "label": "INCORRECT", "reason": "False refusal: the 1.5%/month MSA fees chunk was retrieved at rank 2."},
+    {"id": 7,  "question": "What is the base monthly rent in the commercial lease?", "label": "CORRECT",   "reason": "States $18,000; matches lease clause 2."},
+    {"id": 8,  "question": "What is the security deposit for the commercial lease?", "label": "CORRECT",   "reason": "States $36,000; matches lease clause 3."},
+    {"id": 9,  "question": "What is the annual base salary in the employment agreement?", "label": "CORRECT",   "reason": "States $145,000; matches employment clause 2."},
+    {"id": 10, "question": "How much commercial general liability insurance must the tenant carry?", "label": "CORRECT",   "reason": "States $2,000,000 per occurrence; matches lease clause 7."},
+    {"id": 11, "question": "How many days does the client have to pay an undisputed invoice?", "label": "INCORRECT", "reason": "False refusal: both 30-day (MSA) and 45-day (amendment) chunks retrieved; should have answered 45 (amended)."},
+    {"id": 12, "question": "What are the current payment terms of the agreement with Globex?", "label": "INCORRECT", "reason": "False refusal: the amended 45-day term was rank 1."},
+    {"id": 13, "question": "Which agreements contain a confidentiality clause?", "label": "CORRECT",   "reason": "Correctly names MSA, NDA, amendment; minor clause-cite imprecision but the substance answers the question."},
+    {"id": 14, "question": "What are the governing-law states across all the contracts?", "label": "INCORRECT", "reason": "Refused, but here retrieval missed the governing-law clauses, so refusal is not the ideal outcome; answer to the question was not provided."},
+    {"id": 15, "question": "How long do confidentiality obligations last under the NDA?", "label": "CORRECT",   "reason": "States three (3) years after disclosure; matches NDA."},
+    {"id": 16, "question": "How much paid vacation does the employee get, and how much can carry over?", "label": "CORRECT",   "reason": "20 days/year, up to 5 carry over; matches employment clause 3."},
+    {"id": 17, "question": "What is the non-compete period in the employment agreement?", "label": "CORRECT",   "reason": "States 12 months; matches employment clause 6."},
+    {"id": 18, "question": "How long is the probationary period for the employee?", "label": "CORRECT",   "reason": "States 90 days; matches employment clause 4."},
+    {"id": 19, "question": "What is the penalty for early termination of the car lease?", "label": "CORRECT",   "reason": "Correct refusal: no car lease exists in the corpus."},
+    {"id": 20, "question": "What is the employee's health insurance premium?", "label": "CORRECT",   "reason": "Correct refusal: premium is not specified anywhere."},
+    {"id": 21, "question": "Can the tenant keep a pet on the premises?", "label": "CORRECT",   "reason": "Correct refusal: the lease is silent on pets."},
+    {"id": 22, "question": "What is the termination notice period?", "label": "CORRECT",   "reason": "Refusal is acceptable: the question is ambiguous across three contracts; refusing avoids a wrong single answer."},
+    {"id": 23, "question": "What happens if payment is late?", "label": "CORRECT",   "reason": "Correctly scopes the answer per contract (MSA interest vs lease late fee)."},
+    {"id": 24, "question": "Is the agreement still valid?", "label": "CORRECT",   "reason": "Correct refusal: under-specified, no supportable answer."},
+    {"id": 25, "question": "What law governs the Master Services Agreement? [regression T2]", "label": "INCORRECT", "reason": "Same as id 2: false refusal on the governing-law question."}
+  ]
+}
