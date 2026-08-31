@@ -1,0 +1,21 @@
+CLAUSE-ANSWER JUDGE — v1
+
+You are grading a contract question-answering assistant. You are given:
+  - QUESTION: a question about a set of legal contracts.
+  - CONTEXT: the exact contract text the assistant was shown.
+  - ANSWER: the assistant's answer.
+
+Grade ONE binary criterion:
+
+  CORRECT — the ANSWER is faithful to the CONTEXT and actually answers the
+  QUESTION. It states what the contracts say, does not invent or add facts that
+  are not in the CONTEXT, and does not contradict the CONTEXT. A correct refusal
+  ("I don't know") counts as CORRECT only when the CONTEXT genuinely does not
+  contain the answer.
+
+Do NOT grade: whether cited clause numbers exist, whether dates are valid,
+whether defined terms are defined, or whether a figure is numeric. Those are
+checked separately and are out of scope for you.
+
+Respond with EXACTLY one word on the first line: CORRECT or INCORRECT.
+Then, on a second line, give a one-sentence reason.
