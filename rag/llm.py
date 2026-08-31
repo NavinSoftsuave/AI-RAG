@@ -1,4 +1,7 @@
+import hashlib
+import json
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from google import genai
@@ -7,6 +10,10 @@ from google import genai
 load_dotenv()
 
 MODEL_NAME = "gemini-3.6-flash"
+
+# Disk cache of model responses keyed by (model, prompt). The free tier allows
+# only 20 generations/day, so every prompt is computed at most once and reused.
+_CACHE_DIR = Path(__file__).resolve().parent.parent / ".llm_cache"
 
 _client: genai.Client | None = None
 
@@ -24,6 +31,35 @@ def _get_client() -> genai.Client:
             raise RuntimeError("GEMINI_API_KEY environment variable is not set.")
         _client = genai.Client(api_key=api_key)
     return _client
+
+
+def _cache_path(prompt: str) -> Path:
+    key = hashlib.sha256(f"{MODEL_NAME}\n{prompt}".encode()).hexdigest()
+    return _CACHE_DIR / f"{key}.json"
+
+
+def generate(prompt: str) -> str:
+    """Return the model's response to a raw prompt, cached to disk.
+
+    A cache hit costs nothing; a miss makes one live call and stores the result.
+    Raises QuotaExceeded on a 429 so callers can pause instead of caching junk.
+    """
+    path = _cache_path(prompt)
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))["response"]
+
+    client = _get_client()
+    try:
+        response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
+    except Exception as exc:  # noqa: BLE001 - inspect for quota, re-raise otherwise
+        if "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc):
+            raise QuotaExceeded(str(exc)) from exc
+        raise
+
+    text = (response.text or "I don't know.").strip()
+    _CACHE_DIR.mkdir(exist_ok=True)
+    path.write_text(json.dumps({"prompt": prompt, "response": text}), encoding="utf-8")
+    return text
 
 
 def generate_answer(question: str, context: str) -> str:
@@ -71,19 +107,4 @@ I don't know.
 ANSWER:
 """
 
-    client = _get_client()
-
-    try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=prompt,
-        )
-    except Exception as exc:  # noqa: BLE001 - inspect for quota, re-raise otherwise
-        if "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc):
-            raise QuotaExceeded(str(exc)) from exc
-        raise
-
-    if not response.text:
-        return "I don't know."
-
-    return response.text.strip()
+    return generate(prompt)
