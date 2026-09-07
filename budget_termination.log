@@ -1,0 +1,31 @@
+==================================================
+WEEK 7 PRACTICAL - BUDGET TERMINATION DEMO LOG
+==================================================
+
+--- TEST 1: MAX_ITERS BUDGET TRIGGER ---
+Configured max_iters = 1
+Terminated by budget: True
+Budget fired: MAX_ITERS
+Final Answer: [BUDGET EXCEEDED] Terminated due to max iterations (1 >= 1).
+--------------------------------------------------
+
+--- TEST 2: MAX_TOKENS BUDGET TRIGGER ---
+Configured max_tokens = 100
+Terminated by budget: True
+Budget fired: MAX_TOKENS
+Final Answer: [BUDGET EXCEEDED] Terminated due to token budget (330 >= 100).
+--------------------------------------------------
+
+--- TEST 3: MAX_COST BUDGET TRIGGER ---
+Configured max_cost = $0.000001
+Terminated by budget: True
+Budget fired: MAX_COST
+Final Answer: [BUDGET EXCEEDED] Terminated due to cost budget ($0.0001 >= $0.0000).
+--------------------------------------------------
+
+--- TEST 4: MAX_SECONDS BUDGET TRIGGER ---
+Configured max_seconds = 0.00001s
+Terminated by budget: True
+Budget fired: MAX_SECONDS
+Final Answer: [BUDGET EXCEEDED] Terminated due to wall-clock timeout (0.00s >= 1e-05s).
+==================================================

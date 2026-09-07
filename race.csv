@@ -1,0 +1,16 @@
+Question_ID,Category,Question,Agent_Pass,Agent_Latency_s,Agent_Tokens,Agent_Cost_$,Workflow_Pass,Workflow_Latency_s,Workflow_Tokens,Workflow_Cost_$
+1,single_step,What is the monthly base rent under the Commercial Lease Agreement?,1,0.019,867,0.000199,1,0.023,651,0.000139
+2,single_step,What is the governing law for the Commercial Lease Agreement?,1,0.011,761,0.000192,1,0.022,510,8.5e-05
+3,single_step,What is the annual base salary for the Senior Software Engineer in the Employment Agreement?,1,0.01,948,0.000229,1,0.019,663,0.000123
+4,single_step,What is the duration of confidentiality obligations after disclosure under the Mutual NDA?,1,0.009,999,0.000235,1,0.019,716,0.000126
+5,two_step,What is the notice period required for termination if tenant fails to pay rent under the Commercial Lease Agreement?,1,0.019,1929,0.0004,1,0.019,733,0.000149
+6,two_step,What is the limitation of liability cap specified in Amendment No. 1 to Master Services Agreement?,1,0.009,893,0.000193,1,0.019,662,0.00012
+7,two_step,"How many days of paid vacation per year is the employee entitled to in the Employment Agreement, and how many days can carry over?",1,0.01,1019,0.000253,1,0.02,589,9.6e-05
+8,multi_step_dependent,"Under Amendment No. 1, lookup the defined 'Notice Period' for convenience termination, then lookup the defined 'Cure Period' for material breach in the Amendment schedule, and compare both periods.",1,0.0,1319,0.000291,1,0.022,688,0.000111
+9,multi_step_dependent,"In the Commercial Lease Agreement, resolve the defined 'Effective Date' from Section 1, locate the rent increase percentage on the anniversary date, and calculate the increased monthly rent after 1 year.",1,0.0,306,7e-05,1,0.022,651,0.000109
+10,multi_step_dependent,"In the Employment Agreement, resolve the defined probationary period notice requirement from Section 4, compare it with the non-probationary termination notice requirement in Section 5, and state the notice period during day 45 of employment.",1,0.0,309,6.7e-05,1,0.023,693,0.000116
+
+SUMMARY_METRICS
+System,PassRate(%),p50_Latency(s),Avg_Tokens,Avg_Cost($)
+Agent,100.0,0.009,935,0.000213
+FixedWorkflow,100.0,0.021,656,0.000118
