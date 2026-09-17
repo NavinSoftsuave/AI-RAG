@@ -1,6 +1,8 @@
 import hashlib
 import json
 import os
+import re
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -9,7 +11,12 @@ from google import genai
 # Load GEMINI_API_KEY from .env for both the app and the CLI.
 load_dotenv()
 
-MODEL_NAME = "gemini-3.6-flash"
+MODEL_NAME = os.getenv("RAG_MODEL_NAME", "gemini-3.6-flash")
+# Week 8 agent eval note: the free-tier daily quota for gemini-3.6-flash (20
+# req/day) was exhausted mid-run. RAG_MODEL_NAME lets the agent eval switch to
+# gemini-flash-lite-latest, which has its own separate quota, without touching
+# the Week 5/6 RAG pipeline default. The cache key includes MODEL_NAME so
+# responses from different models never collide.
 
 # Disk cache of model responses keyed by (model, prompt). The free tier allows
 # only 20 generations/day, so every prompt is computed at most once and reused.
@@ -38,7 +45,14 @@ def _cache_path(prompt: str) -> Path:
     return _CACHE_DIR / f"{key}.json"
 
 
-def generate(prompt: str) -> str:
+class NotCached(RuntimeError):
+    """Raised in cache-only mode when a prompt has no stored response.
+
+    Lets an eval run make progress on everything already recorded instead of
+    dying on the first uncached step when the daily API budget is spent."""
+
+
+def generate(prompt: str, cached_only: bool | None = None) -> str:
     """Return the model's response to a raw prompt, cached to disk.
 
     A cache hit costs nothing; a miss makes one live call and stores the result.
@@ -48,16 +62,61 @@ def generate(prompt: str) -> str:
     if path.exists():
         return json.loads(path.read_text(encoding="utf-8"))["response"]
 
+    if cached_only is None:
+        cached_only = os.getenv("LLM_CACHED_ONLY") == "1"
+    if cached_only:
+        raise NotCached("no cached response for this prompt")
+
     client = _get_client()
-    try:
-        response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
+    # 503 UNAVAILABLE ("high demand") is transient and common on long eval runs;
+    # retry with backoff so one blip does not abandon a 10-case trajectory run.
+    # A 429 is retried too as long as the server offers a retryDelay (a
+    # per-minute rate limit) — only a hard daily cap (no retryDelay offered)
+    # falls through to the deterministic fallback below rather than retrying
+    # forever against a quota that will not reset for hours.
+    last: Exception | None = None
+    response = None
+    hit_hard_quota = False
+    for attempt in range(8):
+        try:
+            response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
+            break
+        except Exception as exc:  # noqa: BLE001 - inspect, then retry or re-raise
+            msg = str(exc)
+            if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
+                m = re.search(r"retryDelay['\"]?:\s*['\"]?(\d+)", msg)
+                if m is None:
+                    m = re.search(r"retry in (\d+(?:\.\d+)?)s", msg)
+                if m is None or attempt == 7:
+                    last = exc
+                    hit_hard_quota = True
+                    break
+                last = exc
+                time.sleep(float(m.group(1)) + 2)
+                continue
+            if "503" in msg or "UNAVAILABLE" in msg or "500" in msg:
+                last = exc
+                time.sleep(2 ** attempt)
+                continue
+            raise
+
+    if response is not None:
         text = (response.text or "I don't know.").strip()
-    except Exception as exc:  # noqa: BLE001 - inspect for quota, re-raise otherwise
-        if "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc):
-            # Deterministic fallback synthesis when free tier 20 req/day quota is exhausted
+    elif hit_hard_quota:
+        # Free tier 20 req/day quota exhausted with no retry path left.
+        # rag/answer.py, eval/run_eval_week6.py, eval/run_traces.py and
+        # eval/validate_judge.py all catch QuotaExceeded to pause/skip
+        # gracefully, so the default here still raises it — a caller that
+        # never asked for the fallback must not silently receive fabricated
+        # text disguised as a real model response. Set LLM_FALLBACK_ON_QUOTA=1
+        # to opt into the deterministic canned-answer fallback instead (handy
+        # for a demo/UI session that would rather show *something* than stop).
+        if os.getenv("LLM_FALLBACK_ON_QUOTA") == "1":
             text = _fallback_generate(prompt)
         else:
-            raise
+            raise QuotaExceeded(str(last)) from last
+    else:
+        raise RuntimeError(f"model unavailable after retries: {last}")
 
     _CACHE_DIR.mkdir(exist_ok=True)
     path.write_text(json.dumps({"prompt": prompt, "response": text}), encoding="utf-8")

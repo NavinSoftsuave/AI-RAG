@@ -1,0 +1,99 @@
+{
+  "rows": [
+    {
+      "mode": "wrong_tool",
+      "before": 4,
+      "after": 6,
+      "delta": 2
+    },
+    {
+      "mode": "fabricated_argument",
+      "before": 0,
+      "after": 0,
+      "delta": 0
+    },
+    {
+      "mode": "skipped_required_step",
+      "before": 5,
+      "after": 4,
+      "delta": -1
+    },
+    {
+      "mode": "loop",
+      "before": 0,
+      "after": 0,
+      "delta": 0
+    },
+    {
+      "mode": "step_limit",
+      "before": 0,
+      "after": 0,
+      "delta": 0
+    },
+    {
+      "mode": "quiet_giveup",
+      "before": 0,
+      "after": 0,
+      "delta": 0
+    },
+    {
+      "mode": "unrecoverable_error",
+      "before": 0,
+      "after": 0,
+      "delta": 0
+    }
+  ],
+  "worsened": [
+    "wrong_tool (4->6)"
+  ],
+  "appeared": [],
+  "regressed_cases": [
+    "C3-nda-governing-law",
+    "C10-ambiguous-termination-notice"
+  ],
+  "checked": [
+    "wrong_tool",
+    "fabricated_argument",
+    "skipped_required_step",
+    "loop",
+    "step_limit",
+    "quiet_giveup",
+    "unrecoverable_error"
+  ],
+  "price": {
+    "cost_p50": [
+      0.001171,
+      0.001453
+    ],
+    "cost_max": [
+      0.002869,
+      0.003835
+    ],
+    "latency_p50": [
+      11.5,
+      40004.9
+    ],
+    "latency_max": [
+      44.8,
+      124637.3
+    ],
+    "steps_total": [
+      29,
+      36
+    ]
+  },
+  "rates": {
+    "outcome": [
+      1.0,
+      1.0
+    ],
+    "trajectory": [
+      0.2,
+      0.1
+    ],
+    "gap": [
+      0.8,
+      0.9
+    ]
+  }
+}

@@ -1,0 +1,878 @@
+{
+  "arm": "mitigated",
+  "summary": {
+    "n": 10,
+    "incomplete": [],
+    "tool_choice_accuracy": 0.669,
+    "argument_validity": 1.0,
+    "step_efficiency": 0.476,
+    "cost_p50": 0.001453,
+    "cost_max": 0.003835,
+    "cost_mean": 0.001747,
+    "latency_p50": 40004.9,
+    "latency_max": 124637.3,
+    "outcome_pass_rate": 1.0,
+    "trajectory_pass_rate": 0.1,
+    "gap": 0.9,
+    "mode_counts": {
+      "wrong_tool": 6,
+      "fabricated_argument": 0,
+      "skipped_required_step": 4,
+      "loop": 0,
+      "step_limit": 0,
+      "quiet_giveup": 0,
+      "unrecoverable_error": 0
+    }
+  },
+  "cases": [
+    {
+      "case": "C1-termination-convenience",
+      "mode": "defined-term-dependent",
+      "question": "What is the notice period to terminate the Master Services Agreement for convenience?",
+      "trajectory": {
+        "case_id": "C1-termination-convenience",
+        "question": "What is the notice period to terminate the Master Services Agreement for convenience?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.01
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "terminate for convenience notice"
+            },
+            "ok": true,
+            "result": "[1] sample_amendment.txt (chunk 1)\n1. TERMINATION. Either party may terminate this Agreement for convenience by providing sixty (60) days prior written notice to the other party. In the event of a material breach, the non-breaching party may terminate immediately upon written notice if the breach is not cured within thirty (30) days.\n\n[2] sample_service_agreement.pdf (chunk 8)\n8. TERMINATION Either party may terminate this Agreement for convenience upon sixty (60) days' prior written notice. Either party may terminate immediately upon written notice if the other party materially breaches this Agreement and fails to cure such breach within thirty (30) days of receiving written notice of it. Upon termination, Client shall pay for all services performed up to the effective date of termination.\n\n[3] employment_agreement.txt (chunk 5)\n5. TERMINATION After the probationary period, the Company may terminate the Employee for cause immediately, or without cause upon thirty (30) days' written notice. The Employee may resign upon thirty (30) days' written notice.",
+            "error": "",
+            "latency_ms": 37.37
+          },
+          {
+            "name": "resolve_defined_term",
+            "args": {
+              "term": "Agreement",
+              "document": "msa"
+            },
+            "ok": true,
+            "result": "msa [defined]: MASTER SERVICES AGREEMENT This Master Services Agreement (\"Agreement\") is entered into as of January 15, 2025 (the \"Effective Date\") by and between Acme Corporation, a Delaware corporation (\"Provider\"), and Globex Limited, a company incorporated in England and Wales (\"Client\").",
+            "error": "",
+            "latency_ms": 17.34
+          }
+        ],
+        "answer": "The notice period to terminate the Master Services Agreement for convenience is sixty (60) days' prior written notice, as stated in Master Services Agreement Clause 8 and Amendment No. 1 Clause 1.",
+        "steps": 3,
+        "stopped_reason": "answered",
+        "prompt_tokens": 2990,
+        "completion_tokens": 241,
+        "latency_ms": 48954.21,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts",
+          "resolve_defined_term"
+        ],
+        "cost_usd": 0.001499
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C1-termination-convenience",
+        "mode": "defined-term-dependent",
+        "sequence": [
+          "list_documents",
+          "search_contracts",
+          "resolve_defined_term"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 0.667,
+        "argument_validity": 1.0,
+        "step_efficiency": 1.0,
+        "steps_taken": 3,
+        "steps_needed": 3,
+        "cost_usd": 0.001499,
+        "latency_ms": 48954.21,
+        "failure_modes": [
+          "skipped_required_step"
+        ],
+        "notes": [
+          "never called ['get_clause']"
+        ]
+      }
+    },
+    {
+      "case": "C2-payment-terms-conflict",
+      "mode": "conflict",
+      "question": "How many days does Globex have to pay an undisputed invoice?",
+      "trajectory": {
+        "case_id": "C2-payment-terms-conflict",
+        "question": "How many days does Globex have to pay an undisputed invoice?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.03
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "invoice undisputed pay days"
+            },
+            "ok": true,
+            "result": "[1] sample_service_agreement.pdf (chunk 3)\n3. FEES AND PAYMENT Client shall pay the fees set out in each SOW. Provider shall invoice Client monthly in arrears. Client shall pay all undisputed invoices within thirty (30) days of receipt. Any amount not paid when due shall accrue interest at a rate of one and one-half percent (1.5%) per month, or the maximum rate permitted by law, whichever is lower.\n\n[2] sample_amendment.txt (chunk 2)\n2. PAYMENT TERMS. Globex shall pay all undisputed invoices within forty-five (45) days of receipt. Late payments shall accrue interest at a rate of 1.5% per month.\n\n[3] employment_agreement.txt (chunk 3)\n3. BENEFITS AND LEAVE The Employee is entitled to twenty (20) days of paid vacation per year and ten (10) paid sick days per year. Unused vacation of up to five (5) days may be carried over into the following year; any excess is forfeited.",
+            "error": "",
+            "latency_ms": 40.71
+          },
+          {
+            "name": "get_clause",
+            "args": {
+              "document": "amendment",
+              "clause": "2"
+            },
+            "ok": true,
+            "result": "Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nClause 2. PAYMENT TERMS. Globex shall pay all undisputed invoices with\n\n2. PAYMENT TERMS. Globex shall pay all undisputed invoices within forty-five (45) days of receipt. Late payments shall accrue interest at a rate of 1.5% per month.",
+            "error": "",
+            "latency_ms": 0.2
+          }
+        ],
+        "answer": "Globex has forty-five (45) days to pay an undisputed invoice, as stated in Amendment No. 1, Clause 2.",
+        "steps": 3,
+        "stopped_reason": "answered",
+        "prompt_tokens": 2870,
+        "completion_tokens": 190,
+        "latency_ms": 108622.46,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause"
+        ],
+        "cost_usd": 0.001336
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C2-payment-terms-conflict",
+        "mode": "conflict",
+        "sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 1.0,
+        "argument_validity": 1.0,
+        "step_efficiency": 1.0,
+        "steps_taken": 3,
+        "steps_needed": 3,
+        "cost_usd": 0.001336,
+        "latency_ms": 108622.46,
+        "failure_modes": [
+          "skipped_required_step"
+        ],
+        "notes": [
+          "never opened ['msa']; a conflict there would be invisible"
+        ]
+      }
+    },
+    {
+      "case": "C3-nda-governing-law",
+      "mode": "lookup",
+      "question": "What law governs the mutual non-disclosure agreement?",
+      "trajectory": {
+        "case_id": "C3-nda-governing-law",
+        "question": "What law governs the mutual non-disclosure agreement?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.02
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "governing law NDA"
+            },
+            "ok": true,
+            "result": "[1] mutual_nda.txt (chunk 7)\n7. GOVERNING LAW This Agreement is governed by the laws of the State of New York.\n\n[2] commercial_lease.txt (chunk 9)\n9. GOVERNING LAW This Lease is governed by the laws of the State of Illinois.\n\n[3] employment_agreement.txt (chunk 8)\n8. GOVERNING LAW This Agreement is governed by the laws of the State of California. Note that non-compete clauses may be unenforceable in some jurisdictions.",
+            "error": "",
+            "latency_ms": 45.86
+          }
+        ],
+        "answer": "The mutual non-disclosure agreement is governed by the laws of the State of New York, as stated in Clause 7 (GOVERNING LAW) of the NDA document.",
+        "steps": 2,
+        "stopped_reason": "answered",
+        "prompt_tokens": 1805,
+        "completion_tokens": 141,
+        "latency_ms": 60709.61,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts"
+        ],
+        "cost_usd": 0.000894
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C3-nda-governing-law",
+        "mode": "lookup",
+        "sequence": [
+          "list_documents",
+          "search_contracts"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 1.0,
+        "argument_validity": 1.0,
+        "step_efficiency": 0.5,
+        "steps_taken": 2,
+        "steps_needed": 1,
+        "cost_usd": 0.000894,
+        "latency_ms": 60709.61,
+        "failure_modes": [],
+        "notes": []
+      }
+    },
+    {
+      "case": "C4-confidential-information-definition",
+      "mode": "defined-term-dependent",
+      "question": "Under the mutual NDA, what does Confidential Information exclude?",
+      "trajectory": {
+        "case_id": "C4-confidential-information-definition",
+        "question": "Under the mutual NDA, what does Confidential Information exclude?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.02
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "Confidential Information excludes"
+            },
+            "ok": true,
+            "result": "[1] mutual_nda.txt (chunk 2)\n2. DEFINITION OF CONFIDENTIAL INFORMATION \"Confidential Information\" means any non-public information disclosed by one Party to the other, whether oral, written, or electronic, that is marked confidential or would reasonably be understood to be confidential given its nature. It does not include information that is publicly available, already known to the Receiving Party without obligation, or independently developed.\n\n[2] mutual_nda.txt (chunk 3)\n3. OBLIGATIONS The Receiving Party shall use the Confidential Information solely for the Permitted Purpose, shall not disclose it to any third party, and shall protect it using at least the same degree of care it uses for its own confidential information, and in no event less than reasonable care.\n\n[3] sample_service_agreement.pdf (chunk 5)\n5. CONFIDENTIALITY Each party shall keep the other party's Confidential Information confidential and shall not disclose it to any third party without prior written consent. This obligation shall survive termination of this Agreement for a period of five (5) years. Confidential Information does not include information that is or becomes publicly available through no fault of the receiving party.",
+            "error": "",
+            "latency_ms": 9.4
+          },
+          {
+            "name": "get_clause",
+            "args": {
+              "document": "nda",
+              "clause": "2"
+            },
+            "ok": true,
+            "result": "Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nClause 2. DEFINITION OF CONFIDENTIAL INFORMATION \"Confidential Informa\n\n2. DEFINITION OF CONFIDENTIAL INFORMATION \"Confidential Information\" means any non-public information disclosed by one Party to the other, whether oral, written, or electronic, that is marked confidential or would reasonably be understood to be confidential given its nature. It does not include information that is publicly available, already known to the Receiving Party without obligation, or independently developed.",
+            "error": "",
+            "latency_ms": 0.59
+          }
+        ],
+        "answer": "Under the mutual NDA (Clause 2), \"Confidential Information\" does not include information that is publicly available, already known to the Receiving Party without obligation, or independently developed.",
+        "steps": 3,
+        "stopped_reason": "answered",
+        "prompt_tokens": 3111,
+        "completion_tokens": 190,
+        "latency_ms": 124637.26,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause"
+        ],
+        "cost_usd": 0.001408
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C4-confidential-information-definition",
+        "mode": "defined-term-dependent",
+        "sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 0.333,
+        "argument_validity": 1.0,
+        "step_efficiency": 0.333,
+        "steps_taken": 3,
+        "steps_needed": 1,
+        "cost_usd": 0.001408,
+        "latency_ms": 124637.26,
+        "failure_modes": [
+          "skipped_required_step",
+          "wrong_tool"
+        ],
+        "notes": [
+          "never called ['resolve_defined_term']",
+          "sequence ['list_documents', 'search_contracts', 'get_clause'] matches no accepted path"
+        ]
+      }
+    },
+    {
+      "case": "C5-lease-security-deposit",
+      "mode": "exact-value",
+      "question": "What is the security deposit under the commercial lease?",
+      "trajectory": {
+        "case_id": "C5-lease-security-deposit",
+        "question": "What is the security deposit under the commercial lease?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.02
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "security deposit"
+            },
+            "ok": true,
+            "result": "[1] commercial_lease.txt (chunk 3)\n3. SECURITY DEPOSIT The Tenant shall pay a security deposit of $36,000 upon signing. The deposit is refundable within sixty (60) days of the end of the term, less any deductions for damage beyond normal wear and tear.\n\n[2] commercial_lease.txt (chunk 7)\n7. INSURANCE The Tenant shall maintain commercial general liability insurance of at least $2,000,000 per occurrence and name the Landlord as an additional insured.\n\n[3] commercial_lease.txt (chunk 5)\n5. MAINTENANCE AND REPAIRS The Landlord is responsible for structural repairs and the building's common areas. The Tenant is responsible for interior maintenance, including fixtures and equipment installed by the Tenant.",
+            "error": "",
+            "latency_ms": 41.69
+          }
+        ],
+        "answer": "The security deposit under the commercial lease is $36,000, payable upon signing, as stated in Lease clause 3.",
+        "steps": 2,
+        "stopped_reason": "answered",
+        "prompt_tokens": 1879,
+        "completion_tokens": 121,
+        "latency_ms": 61943.41,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts"
+        ],
+        "cost_usd": 0.000866
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C5-lease-security-deposit",
+        "mode": "exact-value",
+        "sequence": [
+          "list_documents",
+          "search_contracts"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 0.5,
+        "argument_validity": 1.0,
+        "step_efficiency": 0.5,
+        "steps_taken": 2,
+        "steps_needed": 1,
+        "cost_usd": 0.000866,
+        "latency_ms": 61943.41,
+        "failure_modes": [
+          "wrong_tool"
+        ],
+        "notes": [
+          "off-path step in ['list_documents', 'search_contracts']"
+        ]
+      }
+    },
+    {
+      "case": "C6-confidentiality-survival-compare",
+      "mode": "multi-doc",
+      "question": "How long do confidentiality obligations survive under the MSA compared with the mutual NDA?",
+      "trajectory": {
+        "case_id": "C6-confidentiality-survival-compare",
+        "question": "How long do confidentiality obligations survive under the MSA compared with the mutual NDA?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.01
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "confidentiality survive duration"
+            },
+            "ok": true,
+            "result": "[1] mutual_nda.txt (chunk 4)\n4. TERM This Agreement remains in effect for two (2) years from the Effective Date. The confidentiality obligations survive for three (3) years after disclosure of the relevant Confidential Information.\n\n[2] sample_service_agreement.pdf (chunk 5)\n5. CONFIDENTIALITY Each party shall keep the other party's Confidential Information confidential and shall not disclose it to any third party without prior written consent. This obligation shall survive termination of this Agreement for a period of five (5) years. Confidential Information does not include information that is or becomes publicly available through no fault of the receiving party.\n\n[3] sample_service_agreement.pdf (chunk 7)\n7. LIMITATION OF LIABILITY Except for breaches of confidentiality or indemnification obligations, neither party's aggregate liability arising out of or related to this Agreement shall exceed the total fees paid by Client under the applicable SOW during the twelve (12) months preceding the event giving rise to the claim. In no event shall either party be liable for any indirect, incidental, special, or consequential damages.",
+            "error": "",
+            "latency_ms": 41.08
+          },
+          {
+            "name": "get_clause",
+            "args": {
+              "document": "msa",
+              "clause": "5"
+            },
+            "ok": true,
+            "result": "Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\nClause 5. CONFIDENTIALITY Each party shall keep the other party's Conf\n\n5. CONFIDENTIALITY Each party shall keep the other party's Confidential Information confidential and shall not disclose it to any third party without prior written consent. This obligation shall survive termination of this Agreement for a period of five (5) years. Confidential Information does not include information that is or becomes publicly available through no fault of the receiving party.",
+            "error": "",
+            "latency_ms": 0.09
+          },
+          {
+            "name": "resolve_defined_term",
+            "args": {
+              "term": "Confidential Information",
+              "document": "msa"
+            },
+            "ok": true,
+            "result": "msa [defined]: Confidential Information does not include information that is or becomes publicly available through no fault of the receiving party.",
+            "error": "",
+            "latency_ms": 12.51
+          }
+        ],
+        "answer": "Under the MSA (Clause 5), confidentiality obligations survive termination of the Agreement for a period of five (5) years. Under the mutual NDA (Clause 4), confidentiality obligations survive for three (3) years after disclosure of the relevant Confidential Information.",
+        "steps": 4,
+        "stopped_reason": "answered",
+        "prompt_tokens": 4234,
+        "completion_tokens": 262,
+        "latency_ms": 31055.69,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause",
+          "resolve_defined_term"
+        ],
+        "cost_usd": 0.001925
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C6-confidentiality-survival-compare",
+        "mode": "multi-doc",
+        "sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause",
+          "resolve_defined_term"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 0.75,
+        "argument_validity": 1.0,
+        "step_efficiency": 0.5,
+        "steps_taken": 4,
+        "steps_needed": 2,
+        "cost_usd": 0.001925,
+        "latency_ms": 31055.69,
+        "failure_modes": [
+          "skipped_required_step",
+          "wrong_tool"
+        ],
+        "notes": [
+          "never opened ['nda']; a conflict there would be invisible",
+          "off-path step in ['list_documents', 'search_contracts', 'get_clause', 'resolve_defined_term']"
+        ]
+      }
+    },
+    {
+      "case": "C7-noncompete-carveout",
+      "mode": "conditional",
+      "question": "Does the non-compete in the employment agreement apply if Peter Gibbons is terminated without cause?",
+      "trajectory": {
+        "case_id": "C7-noncompete-carveout",
+        "question": "Does the non-compete in the employment agreement apply if Peter Gibbons is terminated without cause?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.02
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "non-compete"
+            },
+            "ok": true,
+            "result": "[1] employment_agreement.txt (chunk 6)\n6. NON-COMPETE For a period of twelve (12) months following termination, the Employee shall not work for a direct competitor within the same metropolitan area. This restriction does not apply if the Employee is terminated without cause.\n\n[2] employment_agreement.txt (chunk 8)\n8. GOVERNING LAW This Agreement is governed by the laws of the State of California. Note that non-compete clauses may be unenforceable in some jurisdictions.\n\n[3] mutual_nda.txt (chunk 0)\nMUTUAL NON-DISCLOSURE AGREEMENT This Mutual Non-Disclosure Agreement (\"Agreement\") is entered into as of February 1, 2025 between Northwind Traders Inc. (\"Disclosing Party\") and Contoso Ltd. (\"Receiving Party\"), together the \"Parties\".",
+            "error": "",
+            "latency_ms": 41.7
+          },
+          {
+            "name": "get_clause",
+            "args": {
+              "document": "employment",
+              "clause": "6"
+            },
+            "ok": true,
+            "result": "Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nClause 6. NON-COMPETE For a period of twelve (12) months following ter\n\n6. NON-COMPETE For a period of twelve (12) months following termination, the Employee shall not work for a direct competitor within the same metropolitan area. This restriction does not apply if the Employee is terminated without cause.",
+            "error": "",
+            "latency_ms": 0.89
+          }
+        ],
+        "answer": "No, the non-compete does not apply if Peter Gibbons is terminated without cause, as stated in Clause 6 of the employment agreement.",
+        "steps": 3,
+        "stopped_reason": "answered",
+        "prompt_tokens": 2850,
+        "completion_tokens": 182,
+        "latency_ms": 11216.42,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause"
+        ],
+        "cost_usd": 0.00131
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C7-noncompete-carveout",
+        "mode": "conditional",
+        "sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": true,
+        "tool_choice_accuracy": 1.0,
+        "argument_validity": 1.0,
+        "step_efficiency": 0.333,
+        "steps_taken": 3,
+        "steps_needed": 1,
+        "cost_usd": 0.00131,
+        "latency_ms": 11216.42,
+        "failure_modes": [],
+        "notes": []
+      }
+    },
+    {
+      "case": "C8-out-of-scope-arbitration-fees",
+      "mode": "out-of-scope",
+      "question": "Who pays the arbitrator's fees in a dispute under the Master Services Agreement?",
+      "trajectory": {
+        "case_id": "C8-out-of-scope-arbitration-fees",
+        "question": "Who pays the arbitrator's fees in a dispute under the Master Services Agreement?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.02
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "arbitrator fees Master Services Agreement"
+            },
+            "ok": true,
+            "result": "[1] sample_amendment.txt (chunk 0)\nAMENDMENT NO. 1 TO MASTER SERVICES AGREEMENT This Amendment No. 1 is entered into as of March 1, 2025, between Acme Corp and Globex Ltd.\n\n[2] sample_service_agreement.pdf (chunk 0)\nMASTER SERVICES AGREEMENT This Master Services Agreement (\"Agreement\") is entered into as of January 15, 2025 (the \"Effective Date\") by and between Acme Corporation, a Delaware corporation (\"Provider\"), and Globex Limited, a company incorporated in England and Wales (\"Client\").\n\n[3] sample_service_agreement.pdf (chunk 3)\n3. FEES AND PAYMENT Client shall pay the fees set out in each SOW. Provider shall invoice Client monthly in arrears. Client shall pay all undisputed invoices within thirty (30) days of receipt. Any amount not paid when due shall accrue interest at a rate of one and one-half percent (1.5%) per month, or the maximum rate permitted by law, whichever is lower.",
+            "error": "",
+            "latency_ms": 41.2
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "arbitration fees dispute"
+            },
+            "ok": true,
+            "result": "[1] sample_service_agreement.pdf (chunk 9)\n9. GOVERNING LAW AND DISPUTES This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles. Any dispute arising under this Agreement shall be resolved by binding arbitration administered in Wilmington, Delaware, under the rules of the American Arbitration Association.\n\n[2] sample_amendment.txt (chunk 3)\n3. LIMITATION OF LIABILITY. Neither party's aggregate liability shall exceed the total fees paid under this Agreement in the twelve (12) months preceding the claim.\n\n[3] sample_service_agreement.pdf (chunk 3)\n3. FEES AND PAYMENT Client shall pay the fees set out in each SOW. Provider shall invoice Client monthly in arrears. Client shall pay all undisputed invoices within thirty (30) days of receipt. Any amount not paid when due shall accrue interest at a rate of one and one-half percent (1.5%) per month, or the maximum rate permitted by law, whichever is lower.",
+            "error": "",
+            "latency_ms": 39.94
+          },
+          {
+            "name": "get_clause",
+            "args": {
+              "document": "msa",
+              "clause": "9"
+            },
+            "ok": true,
+            "result": "Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\nClause 9. GOVERNING LAW AND DISPUTES This Agreement shall be governed \n\n9. GOVERNING LAW AND DISPUTES This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles. Any dispute arising under this Agreement shall be resolved by binding arbitration administered in Wilmington, Delaware, under the rules of the American Arbitration Association.",
+            "error": "",
+            "latency_ms": 0.09
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "arbitrator fees"
+            },
+            "ok": true,
+            "result": "[1] sample_service_agreement.pdf (chunk 3)\n3. FEES AND PAYMENT Client shall pay the fees set out in each SOW. Provider shall invoice Client monthly in arrears. Client shall pay all undisputed invoices within thirty (30) days of receipt. Any amount not paid when due shall accrue interest at a rate of one and one-half percent (1.5%) per month, or the maximum rate permitted by law, whichever is lower.\n\n[2] sample_amendment.txt (chunk 3)\n3. LIMITATION OF LIABILITY. Neither party's aggregate liability shall exceed the total fees paid under this Agreement in the twelve (12) months preceding the claim.\n\n[3] sample_service_agreement.pdf (chunk 7)\n7. LIMITATION OF LIABILITY Except for breaches of confidentiality or indemnification obligations, neither party's aggregate liability arising out of or related to this Agreement shall exceed the total fees paid by Client under the applicable SOW during the twelve (12) months preceding the event giving rise to the claim. In no event shall either party be liable for any indirect, incidental, special, or consequential damages.",
+            "error": "",
+            "latency_ms": 10.75
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "arbitration Wilmington American Arbitration Association"
+            },
+            "ok": true,
+            "result": "[1] sample_service_agreement.pdf (chunk 9)\n9. GOVERNING LAW AND DISPUTES This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles. Any dispute arising under this Agreement shall be resolved by binding arbitration administered in Wilmington, Delaware, under the rules of the American Arbitration Association.\n\n[2] sample_amendment.txt (chunk 5)\n5. GOVERNING LAW. This Agreement shall be governed by the laws of the State of Delaware.\n\n[3] sample_amendment.txt (chunk 0)\nAMENDMENT NO. 1 TO MASTER SERVICES AGREEMENT This Amendment No. 1 is entered into as of March 1, 2025, between Acme Corp and Globex Ltd.",
+            "error": "",
+            "latency_ms": 29.67
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "costs expenses arbitration"
+            },
+            "ok": true,
+            "result": "[1] sample_service_agreement.pdf (chunk 9)\n9. GOVERNING LAW AND DISPUTES This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles. Any dispute arising under this Agreement shall be resolved by binding arbitration administered in Wilmington, Delaware, under the rules of the American Arbitration Association.\n\n[2] sample_amendment.txt (chunk 3)\n3. LIMITATION OF LIABILITY. Neither party's aggregate liability shall exceed the total fees paid under this Agreement in the twelve (12) months preceding the claim.\n\n[3] sample_service_agreement.pdf (chunk 7)\n7. LIMITATION OF LIABILITY Except for breaches of confidentiality or indemnification obligations, neither party's aggregate liability arising out of or related to this Agreement shall exceed the total fees paid by Client under the applicable SOW during the twelve (12) months preceding the event giving rise to the claim. In no event shall either party be liable for any indirect, incidental, special, or consequential damages.",
+            "error": "",
+            "latency_ms": 46.16
+          }
+        ],
+        "answer": "I don't know.",
+        "steps": 7,
+        "stopped_reason": "answered",
+        "prompt_tokens": 9768,
+        "completion_tokens": 362,
+        "latency_ms": 15267.98,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts",
+          "search_contracts",
+          "get_clause",
+          "search_contracts",
+          "search_contracts",
+          "search_contracts"
+        ],
+        "cost_usd": 0.003835
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C8-out-of-scope-arbitration-fees",
+        "mode": "out-of-scope",
+        "sequence": [
+          "list_documents",
+          "search_contracts",
+          "search_contracts",
+          "get_clause",
+          "search_contracts",
+          "search_contracts",
+          "search_contracts"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 0.286,
+        "argument_validity": 1.0,
+        "step_efficiency": 0.143,
+        "steps_taken": 7,
+        "steps_needed": 1,
+        "cost_usd": 0.003835,
+        "latency_ms": 15267.98,
+        "failure_modes": [
+          "wrong_tool"
+        ],
+        "notes": [
+          "off-path step in ['list_documents', 'search_contracts', 'search_contracts', 'get_clause', 'search_contracts', 'search_contracts', 'search_contracts']"
+        ]
+      }
+    },
+    {
+      "case": "C9-msa-renewal-notice",
+      "mode": "defined-term-dependent",
+      "question": "How much notice must a party give to stop the Master Services Agreement from auto-renewing?",
+      "trajectory": {
+        "case_id": "C9-msa-renewal-notice",
+        "question": "How much notice must a party give to stop the Master Services Agreement from auto-renewing?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.02
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "auto-renew notice term Master Services Agreement"
+            },
+            "ok": true,
+            "result": "[1] sample_amendment.txt (chunk 0)\nAMENDMENT NO. 1 TO MASTER SERVICES AGREEMENT This Amendment No. 1 is entered into as of March 1, 2025, between Acme Corp and Globex Ltd.\n\n[2] sample_service_agreement.pdf (chunk 0)\nMASTER SERVICES AGREEMENT This Master Services Agreement (\"Agreement\") is entered into as of January 15, 2025 (the \"Effective Date\") by and between Acme Corporation, a Delaware corporation (\"Provider\"), and Globex Limited, a company incorporated in England and Wales (\"Client\").\n\n[3] sample_service_agreement.pdf (chunk 1)\n1. TERM This Agreement shall commence on the Effective Date and continue for an initial term of two (2) years, unless earlier terminated in accordance with Section 8. Thereafter it shall automatically renew for successive one (1) year periods unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.",
+            "error": "",
+            "latency_ms": 42.18
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "renewal notice Amendment No. 1 Master Services Agreement"
+            },
+            "ok": true,
+            "result": "[1] sample_amendment.txt (chunk 0)\nAMENDMENT NO. 1 TO MASTER SERVICES AGREEMENT This Amendment No. 1 is entered into as of March 1, 2025, between Acme Corp and Globex Ltd.\n\n[2] sample_service_agreement.pdf (chunk 0)\nMASTER SERVICES AGREEMENT This Master Services Agreement (\"Agreement\") is entered into as of January 15, 2025 (the \"Effective Date\") by and between Acme Corporation, a Delaware corporation (\"Provider\"), and Globex Limited, a company incorporated in England and Wales (\"Client\").\n\n[3] sample_service_agreement.pdf (chunk 1)\n1. TERM This Agreement shall commence on the Effective Date and continue for an initial term of two (2) years, unless earlier terminated in accordance with Section 8. Thereafter it shall automatically renew for successive one (1) year periods unless either party gives written notice of non-renewal at least ninety (90) days before the end of the then-current term.",
+            "error": "",
+            "latency_ms": 16.67
+          },
+          {
+            "name": "get_clause",
+            "args": {
+              "document": "amendment",
+              "clause": "1"
+            },
+            "ok": true,
+            "result": "Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nClause 1. TERMINATION. Either party may terminate this Agreement for c\n\n1. TERMINATION. Either party may terminate this Agreement for convenience by providing sixty (60) days prior written notice to the other party. In the event of a material breach, the non-breaching party may terminate immediately upon written notice if the breach is not cured within thirty (30) days.",
+            "error": "",
+            "latency_ms": 0.04
+          },
+          {
+            "name": "get_clause",
+            "args": {
+              "document": "amendment",
+              "clause": "2"
+            },
+            "ok": true,
+            "result": "Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nClause 2. PAYMENT TERMS. Globex shall pay all undisputed invoices with\n\n2. PAYMENT TERMS. Globex shall pay all undisputed invoices within forty-five (45) days of receipt. Late payments shall accrue interest at a rate of 1.5% per month.",
+            "error": "",
+            "latency_ms": 0.18
+          }
+        ],
+        "answer": "To prevent the Master Services Agreement from auto-renewing, a party must give written notice of non-renewal at least ninety (90) days before the end of the then-current term, as stated in the Master Services Agreement (msa), Clause 1.",
+        "steps": 5,
+        "stopped_reason": "answered",
+        "prompt_tokens": 5684,
+        "completion_tokens": 319,
+        "latency_ms": 19061.6,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts",
+          "search_contracts",
+          "get_clause",
+          "get_clause"
+        ],
+        "cost_usd": 0.002503
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C9-msa-renewal-notice",
+        "mode": "defined-term-dependent",
+        "sequence": [
+          "list_documents",
+          "search_contracts",
+          "search_contracts",
+          "get_clause",
+          "get_clause"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 0.4,
+        "argument_validity": 1.0,
+        "step_efficiency": 0.2,
+        "steps_taken": 5,
+        "steps_needed": 1,
+        "cost_usd": 0.002503,
+        "latency_ms": 19061.6,
+        "failure_modes": [
+          "wrong_tool"
+        ],
+        "notes": [
+          "off-path step in ['list_documents', 'search_contracts', 'search_contracts', 'get_clause', 'get_clause']"
+        ]
+      }
+    },
+    {
+      "case": "C10-ambiguous-termination-notice",
+      "mode": "ambiguous",
+      "question": "What is the termination notice period?",
+      "trajectory": {
+        "case_id": "C10-ambiguous-termination-notice",
+        "question": "What is the termination notice period?",
+        "calls": [
+          {
+            "name": "list_documents",
+            "args": {},
+            "ok": true,
+            "result": "msa: Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\namendment: Amendment No. 1 to the Master Services Agreement, dated March 1, 2025\nnda: Mutual Non-Disclosure Agreement (Northwind / Contoso), dated February 1, 2025\nemployment: Employment Agreement (Initech LLC / Peter Gibbons), dated April 10, 2025\nlease: Commercial Lease Agreement (Wayne Enterprises / Oscorp), dated June 1, 2025",
+            "error": "",
+            "latency_ms": 0.02
+          },
+          {
+            "name": "search_contracts",
+            "args": {
+              "query": "termination notice"
+            },
+            "ok": true,
+            "result": "[1] sample_service_agreement.pdf (chunk 8)\n8. TERMINATION Either party may terminate this Agreement for convenience upon sixty (60) days' prior written notice. Either party may terminate immediately upon written notice if the other party materially breaches this Agreement and fails to cure such breach within thirty (30) days of receiving written notice of it. Upon termination, Client shall pay for all services performed up to the effective date of termination.\n\n[2] sample_amendment.txt (chunk 1)\n1. TERMINATION. Either party may terminate this Agreement for convenience by providing sixty (60) days prior written notice to the other party. In the event of a material breach, the non-breaching party may terminate immediately upon written notice if the breach is not cured within thirty (30) days.\n\n[3] employment_agreement.txt (chunk 5)\n5. TERMINATION After the probationary period, the Company may terminate the Employee for cause immediately, or without cause upon thirty (30) days' written notice. The Employee may resign upon thirty (30) days' written notice.",
+            "error": "",
+            "latency_ms": 37.41
+          },
+          {
+            "name": "get_clause",
+            "args": {
+              "document": "msa",
+              "clause": "8"
+            },
+            "ok": true,
+            "result": "Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\nClause 8. TERMINATION Either party may terminate this Agreement for co\n\n8. TERMINATION Either party may terminate this Agreement for convenience upon sixty (60) days' prior written notice. Either party may terminate immediately upon written notice if the other party materially breaches this Agreement and fails to cure such breach within thirty (30) days of receiving written notice of it. Upon termination, Client shall pay for all services performed up to the effective date of termination.",
+            "error": "",
+            "latency_ms": 0.45
+          },
+          {
+            "name": "resolve_defined_term",
+            "args": {
+              "term": "Agreement",
+              "document": "msa"
+            },
+            "ok": true,
+            "result": "msa [defined]: MASTER SERVICES AGREEMENT This Master Services Agreement (\"Agreement\") is entered into as of January 15, 2025 (the \"Effective Date\") by and between Acme Corporation, a Delaware corporation (\"Provider\"), and Globex Limited, a company incorporated in England and Wales (\"Client\").",
+            "error": "",
+            "latency_ms": 1.64
+          }
+        ],
+        "answer": "Under the Master Services Agreement (msa, Clause 8), either party may terminate the Agreement for convenience upon sixty (60) days' prior written notice, or immediately upon written notice for an uncured material breach within thirty (30) days.",
+        "steps": 4,
+        "stopped_reason": "answered",
+        "prompt_tokens": 4144,
+        "completion_tokens": 259,
+        "latency_ms": 6226.2,
+        "blocked_by_guardrail": "",
+        "tool_sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause",
+          "resolve_defined_term"
+        ],
+        "cost_usd": 0.001891
+      },
+      "score": {
+        "complete": true,
+        "case_id": "C10-ambiguous-termination-notice",
+        "mode": "ambiguous",
+        "sequence": [
+          "list_documents",
+          "search_contracts",
+          "get_clause",
+          "resolve_defined_term"
+        ],
+        "outcome_pass": true,
+        "trajectory_pass": false,
+        "tool_choice_accuracy": 0.75,
+        "argument_validity": 1.0,
+        "step_efficiency": 0.25,
+        "steps_taken": 4,
+        "steps_needed": 1,
+        "cost_usd": 0.001891,
+        "latency_ms": 6226.2,
+        "failure_modes": [
+          "wrong_tool"
+        ],
+        "notes": [
+          "off-path step in ['list_documents', 'search_contracts', 'get_clause', 'resolve_defined_term']"
+        ]
+      }
+    }
+  ]
+}

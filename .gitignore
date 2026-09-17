@@ -65,3 +65,6 @@ traces/
 
 # ---- LLM response cache ----
 .llm_cache/
+
+# ---- Week 8: generated at runtime by agent/injection.py, never authored ----
+docs/poisoned_service_agreement.txt
