@@ -93,6 +93,25 @@ def main() -> None:
     call_resp = recv(proc)
     exchange.append({"sent": call_req, "received": call_resp})
 
+    # --- 5. tools/call — a FAILING clause lookup, to show the error shape --------
+    # Same tool, a clause number that does not exist. This is what a tool-level
+    # failure looks like on the wire: still a normal JSON-RPC response (there is
+    # a "result", not an "error" object — see wire_annotated.md), with
+    # isError:true and the failure message as ordinary text content. Compare
+    # against exchange 4's isError:false.
+    fail_req = {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "tools/call",
+        "params": {
+            "name": "get_clause",
+            "arguments": {"document": "msa", "clause": "99"},
+        },
+    }
+    send(proc, fail_req)
+    fail_resp = recv(proc)
+    exchange.append({"sent": fail_req, "received": fail_resp})
+
     proc.stdin.close()
     proc.terminate()
     proc.wait(timeout=5)

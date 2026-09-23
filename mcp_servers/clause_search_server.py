@@ -25,6 +25,7 @@ client — see agent/mcp_client.py).
 from pathlib import Path
 
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError as MCPToolError
 
 # Reuse the exact Week-8 tool implementations — this server does not
 # reimplement clause-search logic, it exposes the one that already exists.
@@ -34,6 +35,33 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from agent import tools as T  # noqa: E402
 from rag.store import VectorStore  # noqa: E402
+
+
+def _clean(fn):
+    """Re-raise agent.tools.ToolError (a plain RuntimeError — deliberately
+    MCP-agnostic, since agent/tools.py is also used by the non-MCP Week-8
+    pipeline) as fastmcp's own ToolError.
+
+    Without this, fastmcp treats a bare RuntimeError as an UNHANDLED server
+    exception: it logs a full traceback to stderr and prefixes the message
+    with "Error calling tool '<name>': " before putting it in isError:true
+    content. The tool's carefully-worded recoverable message (see
+    error_before_after.md) still reaches the model either way — isError is
+    correctly true in both cases — but only this wrapper produces the CLEAN
+    tool-level failure (bare message, no traceback noise, no prefix) that
+    wire_annotated.md documents as the norm for a recoverable tool error.
+    """
+    import functools
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except T.ToolError as exc:
+            raise MCPToolError(str(exc)) from exc
+
+    return wrapper
+
 
 mcp = FastMCP(
     name="clause-search",
@@ -58,6 +86,7 @@ def list_documents() -> str:
 
 
 @mcp.tool
+@_clean
 def search_contracts(query: str) -> str:
     """Search across every contract for text relevant to `query`, combining
     semantic and keyword matching. Returns up to 3 ranked snippets, each
@@ -67,6 +96,7 @@ def search_contracts(query: str) -> str:
 
 
 @mcp.tool
+@_clean
 def get_clause(document: str, clause: str) -> str:
     """Return the verbatim text of one numbered clause of one contract.
 
@@ -87,6 +117,7 @@ def get_clause(document: str, clause: str) -> str:
 
 
 @mcp.tool
+@_clean
 def resolve_defined_term(term: str, document: str = "") -> str:
     """Return where a capitalised defined term (e.g. "Agreement",
     "Confidential Information", "Premises") is defined and by what text. If

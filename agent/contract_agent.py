@@ -211,6 +211,14 @@ def run_agent(
             if mcp_client is not None:
                 ok, result = mcp_client.call_tool(name, args)
                 err = "" if ok else result
+                if not ok:
+                    # Match the legacy _dispatch path's framing exactly, so
+                    # the transcript text the model reads is identical in
+                    # shape regardless of dispatch route — the "ok" field is
+                    # for our own scoring, but the model only ever sees this
+                    # transcript string, and it should not have to infer
+                    # failure from wording alone.
+                    result = f"TOOL ERROR: {result}"
             else:
                 result = _dispatch(name, args, store)
                 ok, err = True, ""

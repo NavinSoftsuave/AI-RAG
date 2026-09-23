@@ -28,7 +28,8 @@ from pathlib import Path
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-CONFIG_PATH = Path(__file__).resolve().parent.parent / "mcp_config.json"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CONFIG_PATH = REPO_ROOT / "mcp_config.json"
 
 
 @dataclass
@@ -60,11 +61,23 @@ class MCPToolClient:
 
     async def connect(self) -> None:
         config = json.loads(self.config_path.read_text(encoding="utf-8"))
+        # mcp_config.json's command/args are written relative to the repo
+        # root (e.g. "./venv/bin/python", "mcp_servers/foo.py") — that is
+        # correct and portable IF the spawned subprocess's cwd is pinned to
+        # the repo root, REGARDLESS of where the config file itself lives
+        # (several of this week's alternate configs sit under
+        # week9_deliverables/, not the repo root) or what the calling
+        # process's own cwd happens to be. Without this, a caller running
+        # from any other working directory — or pointed at one of those
+        # alternate configs — gets a silent FileNotFoundError spawning the
+        # server, because "./venv/bin/python" resolved against the wrong
+        # base directory.
         for server_name, spec in config.get("mcpServers", {}).items():
             params = StdioServerParameters(
                 command=spec["command"],
                 args=spec.get("args", []),
                 env=spec.get("env"),
+                cwd=spec.get("cwd", str(REPO_ROOT)),
             )
             read, write = await self._stack.enter_async_context(stdio_client(params))
             session = await self._stack.enter_async_context(ClientSession(read, write))

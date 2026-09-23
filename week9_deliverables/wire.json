@@ -239,5 +239,32 @@
         "isError": false
       }
     }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "tools/call",
+      "params": {
+        "name": "get_clause",
+        "arguments": {
+          "document": "msa",
+          "clause": "99"
+        }
+      }
+    },
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "no clause '99' in Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025 \u2014 clauses run 1-11; see amendment (Amendment No. 1 to the Master Services Agreement, dated March 1, 2025)"
+          }
+        ],
+        "isError": true
+      }
+    }
   }
 ]

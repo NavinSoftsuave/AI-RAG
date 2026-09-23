@@ -151,7 +151,44 @@ names, argument names, or count is written anywhere in the agent's Python.
 |---|---|
 | `result.content` | A list of content blocks — here one `{"type": "text", "text": ...}` block, the tool's actual return value as a string. MCP content can also be images/resources, but this tool returns plain text. |
 | `result.structuredContent` | fastmcp's auto-wrapped structured/typed version of the same return value, matching `outputSchema` above — provided so a client that wants typed data doesn't have to parse `content[0].text` itself. |
-| `result.isError` | `false` here — this is the field a client checks to distinguish a **tool-level failure** (clause not found, bad argument — reported as `isError: true` with an error message in `content`, but still a normal JSON-RPC response) from a **transport-level failure** (the process died, malformed JSON — which would show up as a JSON-RPC `error` object instead of `result`, or no response at all). This distinction is exactly what makes the Week-9 recoverable-error rewrite (see `error_before_after.md`) work: a bad clause number comes back as `isError: true` with a human-readable message in `content[0].text`, not a broken pipe. |
+| `result.isError` | `false` here — this is the field a client checks to distinguish a **tool-level failure** (clause not found, bad argument — reported as `isError: true` with an error message in `content`, but still a normal JSON-RPC response) from a **transport-level failure** (the process died, malformed JSON — which would show up as a JSON-RPC `error` object instead of `result`, or no response at all). This distinction is exactly what makes the Week-9 recoverable-error rewrite (see `error_before_after.md`) work: a bad clause number comes back as `isError: true` with a human-readable message in `content[0].text`, not a broken pipe. Exchange 5 below is the same call with a clause number that does not exist, to show this in practice rather than just assert it. |
+
+---
+
+## Exchange 5 — `tools/call`, the failing case
+
+**Sent** (id `4`, same tool, a clause number that does not exist):
+```json
+{
+  "jsonrpc": "2.0", "id": 4, "method": "tools/call",
+  "params": { "name": "get_clause", "arguments": { "document": "msa", "clause": "99" } }
+}
+```
+
+**Received** (id `4`):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "result": {
+    "content": [ { "type": "text", "text": "no clause '99' in Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025 — clauses run 1-11; see amendment (Amendment No. 1 to the Master Services Agreement, dated March 1, 2025)" } ],
+    "isError": true
+  }
+}
+```
+
+This is the same shape as exchange 4 in every field EXCEPT: `isError` is now
+`true`, and there is no `structuredContent` (fastmcp only attaches that
+wrapper to a successful, schema-conforming result). The `content[0].text`
+is exactly the Week-9 rewritten error message — the same string
+`agent/tools.py::get_clause` raises as a `ToolError`, re-raised here as
+`fastmcp.exceptions.ToolError` so it surfaces this cleanly (see the `_clean`
+wrapper in `mcp_servers/clause_search_server.py`) rather than as an
+unhandled-exception traceback with an `"Error calling tool '...'"` prefix,
+which is what a bare `RuntimeError` produces by default. Both are equally
+*recoverable* at the protocol level (`isError: true` either way, connection
+stays open) — this fix is about the message being exactly what the tool
+author wrote, with nothing added or lost in translation.
 
 ---
 
