@@ -1,0 +1,8 @@
+# Week 9 requirement 2 proof: git diff of agent/ between
+# commit ac30491 (server one only) and
+# commit ca193de (server one + server two).
+#
+# Command: git diff HEAD~1 HEAD -- agent/
+#
+# Output below this line is everything that command printed.
+# ---------------------------------------------------------------

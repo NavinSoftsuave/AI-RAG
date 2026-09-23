@@ -70,16 +70,18 @@ def search_contracts(query: str) -> str:
 def get_clause(document: str, clause: str) -> str:
     """Return the verbatim text of one numbered clause of one contract.
 
-    `document` must be one of: msa, amendment, nda, employment, lease.
-    `clause` is the clause number as it appears in the contract, e.g. "8".
+    Ask for a clause the way a lawyer would cite it: the short document key
+    (see list_documents) and the clause number as printed in that contract,
+    e.g. get_clause("msa", "8"). Every clause returned is grounded, verbatim
+    text — never a summary or a paraphrase — so you can quote it directly.
 
-    Week-9 rewrite: on an unknown clause number this used to return a bare
-    "Error: clause not found". It now names every clause that DOES exist in
-    that document, and — for the two documents in a base/amendment
-    relationship — tells you which document to check next, so the model can
-    recover instead of giving up. See docstring_prompt.md for the before/after
-    and error_before_after.md for a transcript of the model actually
-    recovering from this rewritten message.
+    If the clause number does not exist in that document, this does not fail
+    silently: it tells you every clause number that DOES exist there, and — if
+    the document is a base agreement with a known amendment — tells you which
+    other document to check next, the way a human paralegal would say "that's
+    not in the MSA, but check the amendment" instead of just "not found".
+    Read that message and retry with a real clause number or the suggested
+    document before giving up and answering "I don't know".
     """
     return T.get_clause(document, clause)
 

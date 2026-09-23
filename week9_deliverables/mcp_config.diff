@@ -1,0 +1,18 @@
+# Week 9 config diff: mcp_config.json between server-one-only and
+# server-one+two. Command: git diff HEAD~1 HEAD -- mcp_config.json
+# ---------------------------------------------------------------
+diff --git a/mcp_config.json b/mcp_config.json
+index c87d3bc..f1a6142 100644
+--- a/mcp_config.json
++++ b/mcp_config.json
+@@ -3,6 +3,10 @@
+     "clause-search": {
+       "command": "./venv/bin/python",
+       "args": ["mcp_servers/clause_search_server.py"]
++    },
++    "contract-repository": {
++      "command": "./venv/bin/python",
++      "args": ["mcp_servers/contract_repository_server.py"]
+     }
+   }
+ }
