@@ -3,6 +3,10 @@
     "clause-search": {
       "command": "./venv/bin/python",
       "args": ["mcp_servers/clause_search_server.py"]
+    },
+    "contract-repository": {
+      "command": "./venv/bin/python",
+      "args": ["mcp_servers/contract_repository_server.py"]
     }
   }
 }
