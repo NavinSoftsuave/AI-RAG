@@ -123,24 +123,51 @@ def _clauses(doc: str) -> dict[str, tuple[str, str]]:
     return out
 
 
+# Week 9 requirement 5: which document a base agreement's amendment lives in,
+# so a missing-clause error can point somewhere real instead of just failing.
+# (Kept tiny and explicit rather than inferred, since guessing an amendment
+# relationship from filenames alone is exactly the kind of fluent fiction this
+# tool exists to prevent.)
+_AMENDS = {"msa": "amendment"}  # msa's terms may be superseded by "amendment"
+
+
 def get_clause(document: str, clause: str) -> str:
     """Return the verbatim text of one numbered clause of one contract.
 
-    Raises ToolError if the clause number does not exist in that document — this
-    is what turns a hallucinated clause reference into a visible tool failure
-    instead of a fluent-sounding answer.
+    Ask for a clause the way a lawyer would cite it: the short document key
+    (see list_documents) and the clause number as printed in that contract,
+    e.g. get_clause("msa", "8"). Every clause returned is grounded, verbatim
+    text — never a summary or a paraphrase — so you can quote it directly.
+
+    If the clause number does not exist in that document, this does not fail
+    silently: it tells you every clause number that DOES exist there, and — if
+    the document is a base agreement with a known amendment — tells you which
+    other document to check next, the way a human paralegal would say "that's
+    not in the MSA, but check the amendment" instead of just "not found".
+    Read that message and retry with a real clause number or the suggested
+    document before giving up and answering "I don't know".
     """
     clause_no = str(clause).strip().lstrip("Ss").lstrip("ection ").strip()
     clause_no = re.sub(r"^(?:Section|Clause)\s*", "", str(clause).strip(), flags=re.I)
     clause_no = clause_no.split(".")[0].strip()
+    doc_key = document.strip().lower()
     table = _clauses(document)
     if clause_no not in table:
+        available = sorted(table, key=int)
+        span = (
+            f"clauses run {available[0]}-{available[-1]}"
+            if len(available) > 1 else f"only clause {available[0]} exists"
+        ) if available else "no numbered clauses were found at all"
+        amendment_hint = ""
+        amends_key = _AMENDS.get(doc_key)
+        if amends_key and amends_key in DOC_REGISTRY:
+            amendment_hint = f"; see {amends_key} ({DOC_TITLES[amends_key]})"
         raise ToolError(
-            f"clause {clause!r} does not exist in {document!r}; "
-            f"available clauses: {sorted(table, key=int)}"
+            f"no clause {clause!r} in {DOC_TITLES.get(doc_key, document)} — "
+            f"{span}{amendment_hint}"
         )
     heading, body = table[clause_no]
-    return f"{DOC_TITLES[document.strip().lower()]}\nClause {clause_no}. {heading}\n\n{body}"
+    return f"{DOC_TITLES[doc_key]}\nClause {clause_no}. {heading}\n\n{body}"
 
 
 # --- tool 4: resolve_defined_term --------------------------------------------

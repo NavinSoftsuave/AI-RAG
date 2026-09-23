@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "clause-search": {
+      "command": "./venv/bin/python",
+      "args": ["mcp_servers/clause_search_server.py"]
+    }
+  }
+}

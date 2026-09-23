@@ -1,0 +1,243 @@
+[
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "initialize",
+      "params": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {},
+        "clientInfo": {
+          "name": "week9-wire-capture",
+          "version": "0.1.0"
+        }
+      }
+    },
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "experimental": {},
+          "prompts": {
+            "listChanged": false
+          },
+          "resources": {
+            "subscribe": false,
+            "listChanged": false
+          },
+          "tools": {
+            "listChanged": true
+          },
+          "tasks": {
+            "list": {},
+            "cancel": {},
+            "requests": {
+              "tools": {
+                "call": {}
+              },
+              "prompts": {
+                "get": {}
+              },
+              "resources": {
+                "read": {}
+              }
+            }
+          }
+        },
+        "serverInfo": {
+          "name": "clause-search",
+          "version": "2.14.7"
+        },
+        "instructions": "Read-only tools over a fixed corpus of 5 contracts (MSA, its Amendment No. 1, a mutual NDA, an employment agreement, and a commercial lease). Use list_documents first if you don't already know which document key to use."
+      }
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "method": "notifications/initialized"
+    },
+    "received": null
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "tools/list",
+      "params": {}
+    },
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "tools": [
+          {
+            "name": "list_documents",
+            "description": "List every contract available, with the short key to use in other\ntools' `document` argument (e.g. \"msa\", \"nda\", \"lease\").",
+            "inputSchema": {
+              "properties": {},
+              "type": "object"
+            },
+            "outputSchema": {
+              "description": "Generic wrapper for non-object return types.",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ],
+              "type": "object",
+              "x-fastmcp-wrap-result": true
+            },
+            "_meta": {
+              "_fastmcp": {
+                "tags": []
+              }
+            }
+          },
+          {
+            "name": "search_contracts",
+            "description": "Search across every contract for text relevant to `query`, combining\nsemantic and keyword matching. Returns up to 3 ranked snippets, each\ntagged with its source document and chunk index. Use this first when you\ndon't know which document or clause number holds the answer.",
+            "inputSchema": {
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ],
+              "type": "object"
+            },
+            "outputSchema": {
+              "description": "Generic wrapper for non-object return types.",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ],
+              "type": "object",
+              "x-fastmcp-wrap-result": true
+            },
+            "_meta": {
+              "_fastmcp": {
+                "tags": []
+              }
+            }
+          },
+          {
+            "name": "get_clause",
+            "description": "Return the verbatim text of one numbered clause of one contract.\n\n`document` must be one of: msa, amendment, nda, employment, lease.\n`clause` is the clause number as it appears in the contract, e.g. \"8\".\n\nWeek-9 rewrite: on an unknown clause number this used to return a bare\n\"Error: clause not found\". It now names every clause that DOES exist in\nthat document, and \u2014 for the two documents in a base/amendment\nrelationship \u2014 tells you which document to check next, so the model can\nrecover instead of giving up. See docstring_prompt.md for the before/after\nand error_before_after.md for a transcript of the model actually\nrecovering from this rewritten message.",
+            "inputSchema": {
+              "properties": {
+                "document": {
+                  "type": "string"
+                },
+                "clause": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "document",
+                "clause"
+              ],
+              "type": "object"
+            },
+            "outputSchema": {
+              "description": "Generic wrapper for non-object return types.",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ],
+              "type": "object",
+              "x-fastmcp-wrap-result": true
+            },
+            "_meta": {
+              "_fastmcp": {
+                "tags": []
+              }
+            }
+          },
+          {
+            "name": "resolve_defined_term",
+            "description": "Return where a capitalised defined term (e.g. \"Agreement\",\n\"Confidential Information\", \"Premises\") is defined and by what text. If\nthe term is used but never defined in the given document, says so and\nreports the incorporating language instead of failing \u2014 a later amendment\nthat never redefines \"Agreement\" is still answerable by pointing at the\ncontract it inherits the definition from.",
+            "inputSchema": {
+              "properties": {
+                "term": {
+                  "type": "string"
+                },
+                "document": {
+                  "default": "",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "term"
+              ],
+              "type": "object"
+            },
+            "outputSchema": {
+              "description": "Generic wrapper for non-object return types.",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ],
+              "type": "object",
+              "x-fastmcp-wrap-result": true
+            },
+            "_meta": {
+              "_fastmcp": {
+                "tags": []
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "tools/call",
+      "params": {
+        "name": "get_clause",
+        "arguments": {
+          "document": "msa",
+          "clause": "8"
+        }
+      }
+    },
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\nClause 8. TERMINATION Either party may terminate this Agreement for co\n\n8. TERMINATION Either party may terminate this Agreement for convenience upon sixty (60) days' prior written notice. Either party may terminate immediately upon written notice if the other party materially breaches this Agreement and fails to cure such breach within thirty (30) days of receiving written notice of it. Upon termination, Client shall pay for all services performed up to the effective date of termination."
+          }
+        ],
+        "structuredContent": {
+          "result": "Master Services Agreement (Acme Corp / Globex Ltd), dated January 15, 2025\nClause 8. TERMINATION Either party may terminate this Agreement for co\n\n8. TERMINATION Either party may terminate this Agreement for convenience upon sixty (60) days' prior written notice. Either party may terminate immediately upon written notice if the other party materially breaches this Agreement and fails to cure such breach within thirty (30) days of receiving written notice of it. Upon termination, Client shall pay for all services performed up to the effective date of termination."
+        },
+        "isError": false
+      }
+    }
+  }
+]

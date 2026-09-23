@@ -134,24 +134,51 @@ def _dispatch(name: str, args: dict, store) -> str:
     raise T.ToolError(f"unknown tool {name!r}")
 
 
+def _mcp_tool_spec(mcp_client) -> str:
+    """Build the tool-spec text shown to the model FROM DISCOVERED TOOLS —
+    tools/list results, not a hand-written string. This is what makes tool
+    discovery real: adding a second MCP server changes what this function
+    renders without changing one line of it (see agent_diff.txt)."""
+    lines = ["You have exactly these tools, discovered over MCP. Call ONE per step.\n"]
+    for name, tool in sorted(mcp_client.tools.items()):
+        props = (tool.input_schema or {}).get("properties", {})
+        arglist = ", ".join(f"{p}: string" for p in props) or ""
+        lines.append(f"{name}({arglist})")
+        lines.append(f"    {tool.description}")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def run_agent(
     question: str,
-    store,
+    store=None,
     case_id: str = "",
     max_steps: int = MAX_STEPS,
     system: str | None = None,
     tool_spec: str | None = None,
     sanitize=None,
     output_guardrail=None,
+    mcp_client=None,
 ) -> Trajectory:
     """Run the agent to an answer or the step limit, recording the trajectory.
 
     `system`, `sanitize` and `output_guardrail` are the hooks the Week-8
     mitigation and the injection defences plug into; with all three left at None
     this is the baseline agent.
+
+    Week 9: pass `mcp_client` (a connected agent.mcp_client.SyncMCPToolClient)
+    to dispatch every tool call over MCP, with the tool list itself coming
+    from tools/list rather than the hard-coded TOOL_SPEC/_dispatch below.
+    `store` and the legacy in-process dispatch stay as the default so every
+    Week-8 caller (eval/trajectory_eval.py, run_injection.py) keeps working
+    unchanged — this parameter is additive, not a replacement.
     """
     traj = Trajectory(case_id=case_id, question=question)
-    sys_prompt = (system or SYSTEM).format(tool_spec=tool_spec or TOOL_SPEC)
+    if mcp_client is not None:
+        sys_prompt = (system or SYSTEM).format(
+            tool_spec=tool_spec or _mcp_tool_spec(mcp_client))
+    else:
+        sys_prompt = (system or SYSTEM).format(tool_spec=tool_spec or TOOL_SPEC)
     transcript: list[str] = [f"QUESTION: {question}"]
     t_start = time.perf_counter()
 
@@ -181,8 +208,12 @@ def run_agent(
 
         t0 = time.perf_counter()
         try:
-            result = _dispatch(name, args, store)
-            ok, err = True, ""
+            if mcp_client is not None:
+                ok, result = mcp_client.call_tool(name, args)
+                err = "" if ok else result
+            else:
+                result = _dispatch(name, args, store)
+                ok, err = True, ""
         except T.ToolError as exc:
             result, ok, err = f"TOOL ERROR: {exc}", False, str(exc)
         except Exception as exc:  # noqa: BLE001 — surface as tool failure
