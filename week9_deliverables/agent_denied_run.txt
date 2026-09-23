@@ -1,0 +1,42 @@
+# agent_denied_run.txt — Week 9 bonus: full agent run against a scoped, denied token
+
+Token: readonly-no-amendments (denied: get_amendment_chain)
+Question: "What is the amendment chain for contract MSA-2025-0142 in the
+contract repository?"
+Config: week9_deliverables/mcp_config.gateway.denied.json (single front door
+= contract-gateway, which fans out to both real backend servers)
+
+The agent's first move is exactly the tool that's denied. It reads the
+denial message — which names the still-permitted alternatives — and
+reconstructs the same answer from tools that ARE in its scope. This is the
+proof that a denial reaches the model as a RECOVERABLE message, not a crash:
+the process never terminates, no exception propagates past the tool-call
+boundary, and the final answer is still correct.
+
+                             'stdio'                                            
+                             'stdio'                                            
+tools: ['clause-search_get_clause', 'clause-search_list_documents', 'clause-search_resolve_defined_term', 'clause-search_search_contracts', 'contract-repository_get_amendment_chain', 'contract-repository_get_effective_date', 'contract-repository_list_contract_ids', 'contract-repository_lookup_contract']
+
+sequence: ['contract-repository_get_amendment_chain', 'contract-repository_lookup_contract', 'contract-repository_list_contract_ids', 'contract-repository_get_effective_date', 'contract-repository_get_effective_date']
+answer: The amendment chain for contract MSA-2025-0142 consists of the base contract MSA-2025-0142 (Master Services Agreement, effective 2025-01-15) and its single amendment AMD-2025-0142-01 (Amendment No. 1 to MSA-2025-0142, effective 2025-03-01).
+
+ - contract-repository_get_amendment_chain {'contract_id': 'MSA-2025-0142'} ok= False
+   result: access denied: token 'readonly-no-amendments' is not permitted to call 'contract-repository_get_amendment_chain'. Base contract lookup (lookup_contract, get_effective_date) is still permitted — use those instead if they answer the question.
+ - contract-repository_lookup_contract {'contract_id': 'MSA-2025-0142'} ok= True
+   result: MSA-2025-0142: Master Services Agreement (Acme Corp / Globex Ltd) — status: active
+ - contract-repository_list_contract_ids {} ok= True
+   result: MSA-2025-0142: Master Services Agreement (Acme Corp / Globex Ltd)
+AMD-2025-0142-01: Amendment No. 1 to MSA-2025-0142
+NDA-2025-0031: Mutual Non-Disclosure Agreement (Northwind / Contoso)
+EMP-2025-0087: Employment Agreement (Initech LLC / Peter Gibbons
+ - contract-repository_get_effective_date {'contract_id': 'MSA-2025-0142'} ok= True
+   result: MSA-2025-0142 effective date: 2025-01-15
+ - contract-repository_get_effective_date {'contract_id': 'AMD-2025-0142-01'} ok= True
+   result: AMD-2025-0142-01 effective date: 2025-03-01
+
+--- audit.log for this run (one line per tools/call, including the denial) ---
+{"ts": "2026-09-23T11:07:28Z", "caller": "readonly-no-amendments", "tool": "contract-repository_get_amendment_chain", "contract_id": "MSA-2025-0142", "arguments": {"contract_id": "MSA-2025-0142"}, "decision": "DENIED"}
+{"ts": "2026-09-23T11:07:28Z", "caller": "readonly-no-amendments", "tool": "contract-repository_lookup_contract", "contract_id": "MSA-2025-0142", "arguments": {"contract_id": "MSA-2025-0142"}, "decision": "ALLOWED"}
+{"ts": "2026-09-23T11:07:28Z", "caller": "readonly-no-amendments", "tool": "contract-repository_list_contract_ids", "contract_id": "-", "arguments": {}, "decision": "ALLOWED"}
+{"ts": "2026-09-23T11:07:28Z", "caller": "readonly-no-amendments", "tool": "contract-repository_get_effective_date", "contract_id": "MSA-2025-0142", "arguments": {"contract_id": "MSA-2025-0142"}, "decision": "ALLOWED"}
+{"ts": "2026-09-23T11:07:28Z", "caller": "readonly-no-amendments", "tool": "contract-repository_get_effective_date", "contract_id": "AMD-2025-0142-01", "arguments": {"contract_id": "AMD-2025-0142-01"}, "decision": "ALLOWED"}

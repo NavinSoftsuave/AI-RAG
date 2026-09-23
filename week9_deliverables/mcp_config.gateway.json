@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "contract-gateway": {
+      "command": "./venv/bin/python",
+      "args": ["mcp_servers/gateway_server.py"]
+    }
+  }
+}
